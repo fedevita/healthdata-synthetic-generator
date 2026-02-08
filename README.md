@@ -37,7 +37,7 @@ Campi:
 	- ward_id: identificatore stringa del reparto. Tipo: VARCHAR.
 - Descrittivi
 	- ward_name: etichetta del reparto (categorico). Tipo: VARCHAR.
-	- specialty: specialita clinica (categorico). Valori nel seed: Cardiology, Neurology, Oncology, Pediatrics, Emergency, ICU, Orthopedics. Tipo: VARCHAR.
+	- specialty: specialita clinica (categorico). Valori nel seed: Cardiologia, Neurologia, Oncologia, Pediatria, Pronto Soccorso, Terapia Intensiva, Ortopedia. Tipo: VARCHAR.
 
 Snippet SQL (Snowflake):
 
@@ -72,7 +72,7 @@ Campi:
 	- city: citta (categorico, trattato come PII nei metadati). Tipo: VARCHAR.
 	- address: indirizzo stradale. Tipo: VARCHAR.
 	- postal_code: CAP. Tipo: VARCHAR.
-	- country: paese (Italy nel seed). Tipo: VARCHAR.
+	- country: paese (Italia nel seed). Tipo: VARCHAR.
 	- email: indirizzo email. Tipo: VARCHAR.
 	- phone: numero di telefono. Tipo: VARCHAR.
 - Assicurazione
@@ -135,9 +135,9 @@ Campi:
 	- first_name: nome. Tipo: VARCHAR.
 	- last_name: cognome. Tipo: VARCHAR.
 - Ruolo e impiego
-	- role: ruolo categorico (ad esempio Nurse, Doctor, Technician, Therapist nel seed). Tipo: VARCHAR.
+	- role: ruolo categorico (ad esempio Infermiere, Medico, Tecnico, Terapista nel seed). Tipo: VARCHAR.
 	- department: reparto/area (allineato alle specialita dei reparti). Tipo: VARCHAR.
-	- employment_type: valore categorico (Full-time, Part-time, Contractor). Tipo: VARCHAR.
+	- employment_type: valore categorico (Tempo pieno, Part-time, Contratto). Tipo: VARCHAR.
 	- hire_date: data in formato YYYY-MM-DD. Tipo: DATE.
 - Contatto
 	- email: email dello staff. Tipo: VARCHAR.
@@ -158,7 +158,7 @@ CREATE OR REPLACE TABLE staff (
 	license_id VARCHAR COMMENT 'Identificativo professionale',
 	hire_date DATE COMMENT 'Data assunzione',
 	CONSTRAINT pk_staff PRIMARY KEY (staff_id),
-	CONSTRAINT ck_staff_employment_type CHECK (employment_type IN ('Full-time', 'Part-time', 'Contractor'))
+	CONSTRAINT ck_staff_employment_type CHECK (employment_type IN ('Tempo pieno', 'Part-time', 'Contratto'))
 )
 COMMENT = 'Anagrafica staff';
 ```
@@ -175,7 +175,7 @@ Campi:
 	- staff_id: chiave esterna verso staff.staff_id. Tipo: VARCHAR.
 	- ward_id: chiave esterna verso wards.ward_id. Tipo: VARCHAR.
 - Turno
-	- shift: valore categorico (Day, Night, Evening nel seed). Tipo: VARCHAR.
+	- shift: valore categorico (Giorno, Notte, Sera nel seed). Tipo: VARCHAR.
 
 Snippet SQL (Snowflake):
 
@@ -188,7 +188,7 @@ CREATE OR REPLACE TABLE staff_assignments (
 	CONSTRAINT pk_staff_assignments PRIMARY KEY (assignment_id),
 	CONSTRAINT fk_staff_assignments_staff FOREIGN KEY (staff_id) REFERENCES staff(staff_id),
 	CONSTRAINT fk_staff_assignments_wards FOREIGN KEY (ward_id) REFERENCES wards(ward_id),
-	CONSTRAINT ck_staff_assignments_shift CHECK (shift IN ('Day', 'Night', 'Evening'))
+	CONSTRAINT ck_staff_assignments_shift CHECK (shift IN ('Giorno', 'Notte', 'Sera'))
 )
 COMMENT = 'Assegnazioni del personale ai reparti';
 ```
@@ -205,10 +205,10 @@ Campi:
 - Relazioni
 	- ward_id: chiave esterna verso wards.ward_id. Tipo: VARCHAR.
 - Descrittivi
-	- device_type: valore categorico (ECG, PulseOx, BP Monitor, Thermometer nel seed). Tipo: VARCHAR.
+	- device_type: valore categorico (ECG, Pulsossimetro, Sfigmomanometro, Termometro nel seed). Tipo: VARCHAR.
 	- manufacturer: produttore del dispositivo. Tipo: VARCHAR.
 	- model: codice modello. Tipo: VARCHAR.
-	- status: valore categorico (Active, Maintenance, Retired). Tipo: VARCHAR.
+	- status: valore categorico (Attivo, Manutenzione, Ritirato). Tipo: VARCHAR.
 - Date di ciclo vita
 	- purchase_date: data in formato YYYY-MM-DD. Tipo: DATE.
 	- last_calibration_date: data in formato YYYY-MM-DD. Tipo: DATE.
@@ -228,8 +228,8 @@ CREATE OR REPLACE TABLE devices (
 	last_calibration_date DATE COMMENT 'Ultima calibrazione',
 	CONSTRAINT pk_devices PRIMARY KEY (device_id),
 	CONSTRAINT fk_devices_wards FOREIGN KEY (ward_id) REFERENCES wards(ward_id),
-	CONSTRAINT ck_devices_device_type CHECK (device_type IN ('ECG', 'PulseOx', 'BP Monitor', 'Thermometer')),
-	CONSTRAINT ck_devices_status CHECK (status IN ('Active', 'Maintenance', 'Retired')),
+	CONSTRAINT ck_devices_device_type CHECK (device_type IN ('ECG', 'Pulsossimetro', 'Sfigmomanometro', 'Termometro')),
+	CONSTRAINT ck_devices_status CHECK (status IN ('Attivo', 'Manutenzione', 'Ritirato')),
 	CONSTRAINT ck_devices_calibration CHECK (last_calibration_date >= purchase_date)
 )
 COMMENT = 'Dispositivi IoT';
@@ -251,9 +251,9 @@ Campi:
 	- discharge_ts: datetime della dimissione. Tipo: TIMESTAMP_NTZ.
 	- length_of_stay_days: durata della degenza in giorni (intero). Tipo: NUMBER(3,0).
 - Classificazioni
-	- admission_type: valore categorico (Emergency, Elective, Urgent). Tipo: VARCHAR.
-	- admission_source: valore categorico (ER, Referral, Transfer). Tipo: VARCHAR.
-	- discharge_status: valore categorico (Home, Transfer, Rehab, Deceased). Tipo: VARCHAR.
+	- admission_type: valore categorico (Emergenza, Elettivo, Urgente). Tipo: VARCHAR.
+	- admission_source: valore categorico (PS, Invio, Trasferimento). Tipo: VARCHAR.
+	- discharge_status: valore categorico (Domicilio, Trasferimento, Riabilitazione, Deceduto). Tipo: VARCHAR.
 
 Snippet SQL (Snowflake):
 
@@ -271,9 +271,9 @@ CREATE OR REPLACE TABLE admissions (
 	CONSTRAINT pk_admissions PRIMARY KEY (admission_id),
 	CONSTRAINT fk_admissions_patients FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
 	CONSTRAINT fk_admissions_wards FOREIGN KEY (ward_id) REFERENCES wards(ward_id),
-	CONSTRAINT ck_admissions_type CHECK (admission_type IN ('Emergency', 'Elective', 'Urgent')),
-	CONSTRAINT ck_admissions_source CHECK (admission_source IN ('ER', 'Referral', 'Transfer')),
-	CONSTRAINT ck_admissions_discharge CHECK (discharge_status IN ('Home', 'Transfer', 'Rehab', 'Deceased')),
+	CONSTRAINT ck_admissions_type CHECK (admission_type IN ('Emergenza', 'Elettivo', 'Urgente')),
+	CONSTRAINT ck_admissions_source CHECK (admission_source IN ('PS', 'Invio', 'Trasferimento')),
+	CONSTRAINT ck_admissions_discharge CHECK (discharge_status IN ('Domicilio', 'Trasferimento', 'Riabilitazione', 'Deceduto')),
 	CONSTRAINT ck_admissions_los CHECK (length_of_stay_days BETWEEN 1 AND 30),
 	CONSTRAINT ck_admissions_dates CHECK (discharge_ts >= admit_ts)
 )
@@ -292,7 +292,7 @@ Campi:
 	- admission_id: chiave esterna verso admissions.admission_id. Tipo: VARCHAR.
 - Codifica clinica
 	- icd10_code: codice diagnostico categorico (I10, E11, J18, K21, M54, N39 nel seed). Tipo: VARCHAR.
-	- severity: valore categorico (low, medium, high). Tipo: VARCHAR.
+	- severity: valore categorico (bassa, media, alta). Tipo: VARCHAR.
 
 Snippet SQL (Snowflake):
 
@@ -304,7 +304,7 @@ CREATE OR REPLACE TABLE diagnoses (
 	severity VARCHAR COMMENT 'Gravita',
 	CONSTRAINT pk_diagnoses PRIMARY KEY (diagnosis_id),
 	CONSTRAINT fk_diagnoses_admissions FOREIGN KEY (admission_id) REFERENCES admissions(admission_id),
-	CONSTRAINT ck_diagnoses_severity CHECK (severity IN ('low', 'medium', 'high'))
+	CONSTRAINT ck_diagnoses_severity CHECK (severity IN ('bassa', 'media', 'alta'))
 )
 COMMENT = 'Diagnosi associate ai ricoveri';
 ```

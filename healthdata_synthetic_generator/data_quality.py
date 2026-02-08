@@ -111,13 +111,13 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "ward_id": pa.Column(str),
                 "ward_name": pa.Column(str),
                 "specialty": pa.Column(str, Check.isin({
-                    "Cardiology",
-                    "Neurology",
-                    "Oncology",
-                    "Pediatrics",
-                    "Emergency",
-                    "ICU",
-                    "Orthopedics",
+                    "Cardiologia",
+                    "Neurologia",
+                    "Oncologia",
+                    "Pediatria",
+                    "Pronto Soccorso",
+                    "Terapia Intensiva",
+                    "Ortopedia",
                 })),
             }
         ),
@@ -135,7 +135,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "city": pa.Column(str),
                 "address": pa.Column(str),
                 "postal_code": pa.Column(str, coerce=True),
-                "country": pa.Column(str, Check.isin({"Italy"})),
+                "country": pa.Column(str, Check.isin({"Italia"})),
                 "email": pa.Column(str),
                 "phone": pa.Column(str),
                 "national_id": pa.Column(str),
@@ -158,7 +158,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "last_name": pa.Column(str),
                 "role": pa.Column(str),
                 "department": pa.Column(str),
-                "employment_type": pa.Column(str, Check.isin({"Full-time", "Part-time", "Contractor"})),
+                "employment_type": pa.Column(str, Check.isin({"Tempo pieno", "Part-time", "Contratto"})),
                 "email": pa.Column(str),
                 "phone": pa.Column(str),
                 "license_id": pa.Column(str),
@@ -174,18 +174,18 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "assignment_id": pa.Column(str),
                 "staff_id": pa.Column(str),
                 "ward_id": pa.Column(str),
-                "shift": pa.Column(str, Check.isin({"Day", "Night", "Evening"})),
+                "shift": pa.Column(str, Check.isin({"Giorno", "Notte", "Sera"})),
             }
         ),
         "devices": pa.DataFrameSchema(
             {
                 "device_id": pa.Column(str),
                 "ward_id": pa.Column(str),
-                "device_type": pa.Column(str, Check.isin({"ECG", "PulseOx", "BP Monitor", "Thermometer"})),
+                "device_type": pa.Column(str, Check.isin({"ECG", "Pulsossimetro", "Sfigmomanometro", "Termometro"})),
                 "manufacturer": pa.Column(str),
                 "model": pa.Column(str),
                 "serial_number": pa.Column(str),
-                "status": pa.Column(str, Check.isin({"Active", "Maintenance", "Retired"})),
+                "status": pa.Column(str, Check.isin({"Attivo", "Manutenzione", "Ritirato"})),
                 "purchase_date": pa.Column(
                     pa.DateTime,
                     Check.between(date_2018_start, date_2024_end),
@@ -206,9 +206,9 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "admit_ts": pa.Column(pa.DateTime, coerce=True),
                 "discharge_ts": pa.Column(pa.DateTime, coerce=True),
                 "length_of_stay_days": pa.Column(int, Check.between(1, 30)),
-                "admission_type": pa.Column(str, Check.isin({"Emergency", "Elective", "Urgent"})),
-                "admission_source": pa.Column(str, Check.isin({"ER", "Referral", "Transfer"})),
-                "discharge_status": pa.Column(str, Check.isin({"Home", "Transfer", "Rehab", "Deceased"})),
+                "admission_type": pa.Column(str, Check.isin({"Emergenza", "Elettivo", "Urgente"})),
+                "admission_source": pa.Column(str, Check.isin({"PS", "Invio", "Trasferimento"})),
+                "discharge_status": pa.Column(str, Check.isin({"Domicilio", "Trasferimento", "Riabilitazione", "Deceduto"})),
             }
         ),
         "diagnoses": pa.DataFrameSchema(
@@ -216,7 +216,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "diagnosis_id": pa.Column(str),
                 "admission_id": pa.Column(str),
                 "icd10_code": pa.Column(str, Check.isin({"I10", "E11", "J18", "K21", "M54", "N39"})),
-                "severity": pa.Column(str, Check.isin({"low", "medium", "high"})),
+                "severity": pa.Column(str, Check.isin({"bassa", "media", "alta"})),
             }
         ),
         "vital_signs": pa.DataFrameSchema(

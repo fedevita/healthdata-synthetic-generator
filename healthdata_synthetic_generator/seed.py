@@ -57,9 +57,17 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
         return pd.Series(pd.to_datetime(values))
 
     ward_ids = make_ids("W", n_wards, 3)
-    ward_names = [f"Ward {i:02d}" for i in range(1, n_wards + 1)]
+    ward_names = [f"Reparto {i:02d}" for i in range(1, n_wards + 1)]
     specialties = rng.choice(
-        ["Cardiology", "Neurology", "Oncology", "Pediatrics", "Emergency", "ICU", "Orthopedics"],
+        [
+            "Cardiologia",
+            "Neurologia",
+            "Oncologia",
+            "Pediatria",
+            "Pronto Soccorso",
+            "Terapia Intensiva",
+            "Ortopedia",
+        ],
         size=n_wards,
         replace=True,
     )
@@ -74,16 +82,16 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
     last_names = ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano", "Gallo", "Costa", "Fontana", "Greco"]
     languages = ["it", "en", "es", "fr", "de"]
     marital_statuses = ["single", "married", "divorced", "widowed"]
-    insurance_providers = ["Aetna", "Allianz", "Generali", "Unisalute", "Uniqa"]
+    insurance_providers = ["Generali", "Unisalute", "Reale Mutua", "Poste Vita", "Sara Assicurazioni"]
     insurance_plans = ["basic", "standard", "premium"]
     street_names = ["Via Roma", "Corso Italia", "Via Milano", "Via Garibaldi", "Via Dante", "Via Verdi"]
-    cities = ["Milan", "Rome", "Turin", "Naples", "Bologna", "Florence"]
-    countries = ["Italy"]
+    cities = ["Milano", "Roma", "Torino", "Napoli", "Bologna", "Firenze", "Venezia", "Genova"]
+    countries = ["Italia"]
     blood_types = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
     first_name = rng.choice(first_names, size=n_patients)
     last_name = rng.choice(last_names, size=n_patients)
     email_suffix = rng.integers(1, 9999, size=n_patients)
-    email = [f"{fn.lower()}.{ln.lower()}{num}@example.org" for fn, ln, num in zip(first_name, last_name, email_suffix)]
+    email = [f"{fn.lower()}.{ln.lower()}{num}@example.it" for fn, ln, num in zip(first_name, last_name, email_suffix)]
     phone = [f"+39 3{rng.integers(10**8, 10**9 - 1):09d}" for _ in range(n_patients)]
     emergency_contact_name = [
         f"{fn} {ln}" for fn, ln in zip(rng.choice(first_names, size=n_patients), rng.choice(last_names, size=n_patients))
@@ -103,7 +111,7 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
         "phone": phone,
         "national_id": [f"CF{rng.integers(10**9, 10**10 - 1):010d}" for _ in range(n_patients)],
         "marital_status": rng.choice(marital_statuses, size=n_patients),
-        "primary_language": rng.choice(languages, size=n_patients),
+        "primary_language": rng.choice(languages, size=n_patients, p=[0.8, 0.1, 0.05, 0.03, 0.02]),
         "insurance_provider": rng.choice(insurance_providers, size=n_patients),
         "insurance_plan": rng.choice(insurance_plans, size=n_patients),
         "insurance_id": [f"INS{rng.integers(10**7, 10**8 - 1):07d}" for _ in range(n_patients)],
@@ -117,14 +125,14 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
     staff_ids = make_ids("S", n_staff, 5)
     staff_first = rng.choice(first_names, size=n_staff)
     staff_last = rng.choice(last_names, size=n_staff)
-    staff_email = [f"{fn.lower()}.{ln.lower()}@hospital.example.org" for fn, ln in zip(staff_first, staff_last)]
+    staff_email = [f"{fn.lower()}.{ln.lower()}@ospedale.example.it" for fn, ln in zip(staff_first, staff_last)]
     staff = pd.DataFrame({
         "staff_id": staff_ids,
         "first_name": staff_first,
         "last_name": staff_last,
-        "role": rng.choice(["Nurse", "Doctor", "Technician", "Therapist"], size=n_staff),
+        "role": rng.choice(["Infermiere", "Medico", "Tecnico", "Terapista"], size=n_staff),
         "department": rng.choice(specialties, size=n_staff),
-        "employment_type": rng.choice(["Full-time", "Part-time", "Contractor"], size=n_staff),
+        "employment_type": rng.choice(["Tempo pieno", "Part-time", "Contratto"], size=n_staff),
         "email": staff_email,
         "phone": [f"+39 3{rng.integers(10**8, 10**9 - 1):09d}" for _ in range(n_staff)],
         "license_id": [f"LIC{rng.integers(10**6, 10**7 - 1):06d}" for _ in range(n_staff)],
@@ -136,7 +144,7 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
         "assignment_id": assignment_ids,
         "staff_id": rng.choice(staff_ids, size=n_assignments, replace=True),
         "ward_id": rng.choice(ward_ids, size=n_assignments, replace=True),
-        "shift": rng.choice(["Day", "Night", "Evening"], size=n_assignments),
+        "shift": rng.choice(["Giorno", "Notte", "Sera"], size=n_assignments),
     })
 
     device_ids = make_ids("D", n_devices, 5)
@@ -151,11 +159,11 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
     devices = pd.DataFrame({
         "device_id": device_ids,
         "ward_id": rng.choice(ward_ids, size=n_devices, replace=True),
-        "device_type": rng.choice(["ECG", "PulseOx", "BP Monitor", "Thermometer"], size=n_devices),
+        "device_type": rng.choice(["ECG", "Pulsossimetro", "Sfigmomanometro", "Termometro"], size=n_devices),
         "manufacturer": rng.choice(manufacturers, size=n_devices),
         "model": rng.choice(models, size=n_devices),
         "serial_number": [f"SN{rng.integers(10**9, 10**10 - 1):010d}" for _ in range(n_devices)],
-        "status": rng.choice(["Active", "Maintenance", "Retired"], size=n_devices, p=[0.8, 0.15, 0.05]),
+        "status": rng.choice(["Attivo", "Manutenzione", "Ritirato"], size=n_devices, p=[0.8, 0.15, 0.05]),
         "purchase_date": purchase_dates,
         "last_calibration_date": calibration_dates,
     })
@@ -171,9 +179,9 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
         "admit_ts": admit_ts,
         "discharge_ts": discharge_ts,
         "length_of_stay_days": length_days,
-        "admission_type": rng.choice(["Emergency", "Elective", "Urgent"], size=n_admissions),
-        "admission_source": rng.choice(["ER", "Referral", "Transfer"], size=n_admissions),
-        "discharge_status": rng.choice(["Home", "Transfer", "Rehab", "Deceased"], size=n_admissions, p=[0.8, 0.1, 0.08, 0.02]),
+        "admission_type": rng.choice(["Emergenza", "Elettivo", "Urgente"], size=n_admissions),
+        "admission_source": rng.choice(["PS", "Invio", "Trasferimento"], size=n_admissions),
+        "discharge_status": rng.choice(["Domicilio", "Trasferimento", "Riabilitazione", "Deceduto"], size=n_admissions, p=[0.8, 0.1, 0.08, 0.02]),
     })
 
     diagnosis_ids = make_ids("DX", n_diagnoses, 7)
@@ -181,7 +189,7 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
         "diagnosis_id": diagnosis_ids,
         "admission_id": rng.choice(admission_ids, size=n_diagnoses, replace=True),
         "icd10_code": rng.choice(["I10", "E11", "J18", "K21", "M54", "N39"], size=n_diagnoses),
-        "severity": rng.choice(["low", "medium", "high"], size=n_diagnoses, p=[0.5, 0.35, 0.15]),
+        "severity": rng.choice(["bassa", "media", "alta"], size=n_diagnoses, p=[0.5, 0.35, 0.15]),
     })
 
     measurement_ids = make_ids("VS", n_vitals, 7)

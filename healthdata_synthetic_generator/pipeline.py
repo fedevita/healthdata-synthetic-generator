@@ -15,6 +15,48 @@ def build_metadata(real_tables: Dict[str, pd.DataFrame], metadata_path: Path) ->
     if metadata_path.exists():
         metadata_path.unlink()
     metadata = Metadata.detect_from_dataframes(data=real_tables)
+    # Force categorical sdtypes for locale-sensitive fields to keep Italian values.
+    categorical_fields = {
+        "patients": [
+            "first_name",
+            "last_name",
+            "sex",
+            "city",
+            "address",
+            "postal_code",
+            "country",
+            "email",
+            "phone",
+            "national_id",
+            "marital_status",
+            "primary_language",
+            "insurance_provider",
+            "insurance_plan",
+            "insurance_id",
+            "emergency_contact_name",
+            "emergency_contact_phone",
+            "blood_type",
+        ],
+        "staff": [
+            "first_name",
+            "last_name",
+            "role",
+            "department",
+            "employment_type",
+            "email",
+            "phone",
+            "license_id",
+        ],
+        "wards": ["ward_name", "specialty"],
+        "staff_assignments": ["shift"],
+        "devices": ["device_type", "manufacturer", "model", "serial_number", "status"],
+        "admissions": ["admission_type", "admission_source", "discharge_status"],
+        "diagnoses": ["icd10_code", "severity"],
+    }
+    for table_name, columns in categorical_fields.items():
+        for column in columns:
+            if column in real_tables.get(table_name, pd.DataFrame()).columns:
+                metadata.update_column(column, table_name=table_name, sdtype="categorical")
     metadata.save_to_json(metadata_path)
     return Metadata.load_from_json(metadata_path)
 
