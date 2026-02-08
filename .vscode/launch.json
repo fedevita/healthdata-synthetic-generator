@@ -6,7 +6,16 @@
       "type": "python",
       "request": "launch",
       "module": "healthdata_synthetic_generator",
-      "args": [],
+      "args": [
+        "--out-dir",
+        "${input:outDir}",
+        "--format",
+        "${input:format}",
+        "--scale",
+        "${input:scale}",
+        "--seed",
+        "${input:seed}"
+      ],
       "console": "integratedTerminal"
     },
     {
@@ -16,6 +25,32 @@
       "module": "pytest",
       "args": ["-q"],
       "console": "integratedTerminal"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "outDir",
+      "type": "promptString",
+      "description": "Output directory",
+      "default": "out"
+    },
+    {
+      "id": "format",
+      "type": "promptString",
+      "description": "Export format (csv or parquet)",
+      "default": "csv"
+    },
+    {
+      "id": "scale",
+      "type": "promptString",
+      "description": "Sampling scale factor",
+      "default": "2.0"
+    },
+    {
+      "id": "seed",
+      "type": "promptString",
+      "description": "Random seed",
+      "default": "42"
     }
   ]
 }
