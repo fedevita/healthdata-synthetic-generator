@@ -13,25 +13,25 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = PROJECT_ROOT / "out"
 
 PKS: Dict[str, str] = {
-    "patients": "patient_id",
-    "admissions": "admission_id",
-    "diagnoses": "diagnosis_id",
-    "wards": "ward_id",
-    "staff": "staff_id",
-    "staff_assignments": "assignment_id",
-    "devices": "device_id",
-    "vital_signs": "measurement_id",
+    "patients": "id_paziente",
+    "admissions": "id_ricovero",
+    "diagnoses": "id_diagnosi",
+    "wards": "id_reparto",
+    "staff": "id_staff",
+    "staff_assignments": "id_assegnazione",
+    "devices": "id_dispositivo",
+    "vital_signs": "id_misurazione",
 }
 
 FKS: List[Tuple[str, str, str, str]] = [
-    ("admissions", "patient_id", "patients", "patient_id"),
-    ("admissions", "ward_id", "wards", "ward_id"),
-    ("diagnoses", "admission_id", "admissions", "admission_id"),
-    ("staff_assignments", "staff_id", "staff", "staff_id"),
-    ("staff_assignments", "ward_id", "wards", "ward_id"),
-    ("devices", "ward_id", "wards", "ward_id"),
-    ("vital_signs", "patient_id", "patients", "patient_id"),
-    ("vital_signs", "device_id", "devices", "device_id"),
+    ("admissions", "id_paziente", "patients", "id_paziente"),
+    ("admissions", "id_reparto", "wards", "id_reparto"),
+    ("diagnoses", "id_ricovero", "admissions", "id_ricovero"),
+    ("staff_assignments", "id_staff", "staff", "id_staff"),
+    ("staff_assignments", "id_reparto", "wards", "id_reparto"),
+    ("devices", "id_reparto", "wards", "id_reparto"),
+    ("vital_signs", "id_paziente", "patients", "id_paziente"),
+    ("vital_signs", "id_dispositivo", "devices", "id_dispositivo"),
 ]
 
 
@@ -108,9 +108,9 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
     return {
         "wards": pa.DataFrameSchema(
             {
-                "ward_id": pa.Column(str),
-                "ward_name": pa.Column(str),
-                "specialty": pa.Column(str, Check.isin({
+                "id_reparto": pa.Column(str),
+                "nome_reparto": pa.Column(str),
+                "specialita": pa.Column(str, Check.isin({
                     "Cardiologia",
                     "Neurologia",
                     "Oncologia",
@@ -123,46 +123,46 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
         ),
         "patients": pa.DataFrameSchema(
             {
-                "patient_id": pa.Column(str),
-                "first_name": pa.Column(str),
-                "last_name": pa.Column(str),
-                "sex": pa.Column(str, Check.isin({"F", "M"})),
-                "birth_date": pa.Column(
+                "id_paziente": pa.Column(str),
+                "nome": pa.Column(str),
+                "cognome": pa.Column(str),
+                "sesso": pa.Column(str, Check.isin({"F", "M"})),
+                "data_nascita": pa.Column(
                     pa.DateTime,
                     Check.between(date_1950, date_2010),
                     coerce=True,
                 ),
-                "city": pa.Column(str),
-                "address": pa.Column(str),
-                "postal_code": pa.Column(str, coerce=True),
-                "country": pa.Column(str, Check.isin({"Italia"})),
+                "citta": pa.Column(str),
+                "indirizzo": pa.Column(str),
+                "cap": pa.Column(str, coerce=True),
+                "paese": pa.Column(str, Check.isin({"Italia"})),
                 "email": pa.Column(str),
-                "phone": pa.Column(str),
-                "national_id": pa.Column(str),
-                "marital_status": pa.Column(str, Check.isin({"single", "married", "divorced", "widowed"})),
-                "primary_language": pa.Column(str, Check.isin({"it", "en", "es", "fr", "de"})),
-                "insurance_provider": pa.Column(str),
-                "insurance_plan": pa.Column(str, Check.isin({"basic", "standard", "premium"})),
-                "insurance_id": pa.Column(str),
-                "emergency_contact_name": pa.Column(str),
-                "emergency_contact_phone": pa.Column(str),
-                "height_cm": pa.Column(int, Check.between(140, 200)),
-                "weight_kg": pa.Column(int, Check.between(45, 120)),
-                "blood_type": pa.Column(str, Check.isin({"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"})),
+                "telefono": pa.Column(str),
+                "codice_fiscale": pa.Column(str),
+                "stato_civile": pa.Column(str, Check.isin({"celibe/nubile", "sposato/a", "divorziato/a", "vedovo/a"})),
+                "lingua_primaria": pa.Column(str, Check.isin({"it"})),
+                "compagnia_assicurativa": pa.Column(str),
+                "piano_assicurativo": pa.Column(str, Check.isin({"basic", "standard", "premium"})),
+                "id_assicurazione": pa.Column(str),
+                "contatto_emergenza_nome": pa.Column(str),
+                "contatto_emergenza_telefono": pa.Column(str),
+                "altezza_cm": pa.Column(int, Check.between(140, 200)),
+                "peso_kg": pa.Column(int, Check.between(45, 120)),
+                "gruppo_sanguigno": pa.Column(str, Check.isin({"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"})),
             }
         ),
         "staff": pa.DataFrameSchema(
             {
-                "staff_id": pa.Column(str),
-                "first_name": pa.Column(str),
-                "last_name": pa.Column(str),
-                "role": pa.Column(str),
-                "department": pa.Column(str),
-                "employment_type": pa.Column(str, Check.isin({"Tempo pieno", "Part-time", "Contratto"})),
+                "id_staff": pa.Column(str),
+                "nome": pa.Column(str),
+                "cognome": pa.Column(str),
+                "ruolo": pa.Column(str),
+                "reparto": pa.Column(str),
+                "tipo_impiego": pa.Column(str, Check.isin({"Tempo pieno", "Part-time", "Contratto"})),
                 "email": pa.Column(str),
-                "phone": pa.Column(str),
-                "license_id": pa.Column(str),
-                "hire_date": pa.Column(
+                "telefono": pa.Column(str),
+                "id_licenza": pa.Column(str),
+                "data_assunzione": pa.Column(
                     pa.DateTime,
                     Check.between(date_2010_start, date_2024_end),
                     coerce=True,
@@ -171,27 +171,27 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
         ),
         "staff_assignments": pa.DataFrameSchema(
             {
-                "assignment_id": pa.Column(str),
-                "staff_id": pa.Column(str),
-                "ward_id": pa.Column(str),
-                "shift": pa.Column(str, Check.isin({"Giorno", "Notte", "Sera"})),
+                "id_assegnazione": pa.Column(str),
+                "id_staff": pa.Column(str),
+                "id_reparto": pa.Column(str),
+                "turno": pa.Column(str, Check.isin({"Giorno", "Notte", "Sera"})),
             }
         ),
         "devices": pa.DataFrameSchema(
             {
-                "device_id": pa.Column(str),
-                "ward_id": pa.Column(str),
-                "device_type": pa.Column(str, Check.isin({"ECG", "Pulsossimetro", "Sfigmomanometro", "Termometro"})),
-                "manufacturer": pa.Column(str),
-                "model": pa.Column(str),
-                "serial_number": pa.Column(str),
-                "status": pa.Column(str, Check.isin({"Attivo", "Manutenzione", "Ritirato"})),
-                "purchase_date": pa.Column(
+                "id_dispositivo": pa.Column(str),
+                "id_reparto": pa.Column(str),
+                "tipo_dispositivo": pa.Column(str, Check.isin({"ECG", "Pulsossimetro", "Sfigmomanometro", "Termometro"})),
+                "produttore": pa.Column(str),
+                "modello": pa.Column(str),
+                "numero_serie": pa.Column(str),
+                "stato": pa.Column(str, Check.isin({"Attivo", "Manutenzione", "Ritirato"})),
+                "data_acquisto": pa.Column(
                     pa.DateTime,
                     Check.between(date_2018_start, date_2024_end),
                     coerce=True,
                 ),
-                "last_calibration_date": pa.Column(
+                "data_ultima_calibrazione": pa.Column(
                     pa.DateTime,
                     Check.between(date_2024_start, date_2026_end),
                     coerce=True,
@@ -200,42 +200,42 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
         ),
         "admissions": pa.DataFrameSchema(
             {
-                "admission_id": pa.Column(str),
-                "patient_id": pa.Column(str),
-                "ward_id": pa.Column(str),
-                "admit_ts": pa.Column(pa.DateTime, coerce=True),
-                "discharge_ts": pa.Column(pa.DateTime, coerce=True),
-                "length_of_stay_days": pa.Column(int, Check.between(1, 30)),
-                "admission_type": pa.Column(str, Check.isin({"Emergenza", "Elettivo", "Urgente"})),
-                "admission_source": pa.Column(str, Check.isin({"PS", "Invio", "Trasferimento"})),
-                "discharge_status": pa.Column(str, Check.isin({"Domicilio", "Trasferimento", "Riabilitazione", "Deceduto"})),
+                "id_ricovero": pa.Column(str),
+                "id_paziente": pa.Column(str),
+                "id_reparto": pa.Column(str),
+                "data_ricovero": pa.Column(pa.DateTime, coerce=True),
+                "data_dimissione": pa.Column(pa.DateTime, coerce=True),
+                "durata_degenza_giorni": pa.Column(int, Check.between(1, 30)),
+                "tipo_ricovero": pa.Column(str, Check.isin({"Emergenza", "Elettivo", "Urgente"})),
+                "provenienza_ricovero": pa.Column(str, Check.isin({"PS", "Invio", "Trasferimento"})),
+                "esito_dimissione": pa.Column(str, Check.isin({"Domicilio", "Trasferimento", "Riabilitazione", "Deceduto"})),
             }
         ),
         "diagnoses": pa.DataFrameSchema(
             {
-                "diagnosis_id": pa.Column(str),
-                "admission_id": pa.Column(str),
-                "icd10_code": pa.Column(str, Check.isin({"I10", "E11", "J18", "K21", "M54", "N39"})),
-                "severity": pa.Column(str, Check.isin({"bassa", "media", "alta"})),
+                "id_diagnosi": pa.Column(str),
+                "id_ricovero": pa.Column(str),
+                "codice_icd10": pa.Column(str, Check.isin({"I10", "E11", "J18", "K21", "M54", "N39"})),
+                "gravita": pa.Column(str, Check.isin({"bassa", "media", "alta"})),
             }
         ),
         "vital_signs": pa.DataFrameSchema(
             {
-                "measurement_id": pa.Column(str),
-                "patient_id": pa.Column(str),
-                "device_id": pa.Column(str),
-                "measured_at": pa.Column(
+                "id_misurazione": pa.Column(str),
+                "id_paziente": pa.Column(str),
+                "id_dispositivo": pa.Column(str),
+                "data_misurazione": pa.Column(
                     pa.DateTime,
                     Check.between(date_2025_start, date_2026_end),
                     coerce=True,
                 ),
-                "heart_rate": pa.Column(int, Check.between(50, 120)),
-                "spo2": pa.Column(int, Check.between(90, 100)),
-                "systolic_bp": pa.Column(int, Check.between(95, 160)),
-                "diastolic_bp": pa.Column(int, Check.between(60, 100)),
-                "temperature_c": pa.Column(float, Check.between(35.0, 40.5)),
-                "respiratory_rate": pa.Column(int, Check.between(10, 30)),
-                "glucose_mg_dl": pa.Column(int, Check.between(70, 180)),
+                "frequenza_cardiaca": pa.Column(int, Check.between(50, 120)),
+                "saturazione_ossigeno": pa.Column(int, Check.between(90, 100)),
+                "pressione_sistolica": pa.Column(int, Check.between(95, 160)),
+                "pressione_diastolica": pa.Column(int, Check.between(60, 100)),
+                "temperatura_c": pa.Column(float, Check.between(35.0, 40.5)),
+                "frequenza_respiratoria": pa.Column(int, Check.between(10, 30)),
+                "glicemia_mg_dl": pa.Column(int, Check.between(70, 180)),
             }
         ),
     }
@@ -279,32 +279,32 @@ def validate_domain_constraints(tables: Dict[str, pd.DataFrame]) -> None:
             ) from exc
 
     admissions = tables["admissions"].copy()
-    admissions["admit_ts"] = pd.to_datetime(admissions["admit_ts"], errors="coerce")
-    admissions["discharge_ts"] = pd.to_datetime(admissions["discharge_ts"], errors="coerce")
-    invalid_admissions = admissions[admissions["admit_ts"] > admissions["discharge_ts"]]
+    admissions["data_ricovero"] = pd.to_datetime(admissions["data_ricovero"], errors="coerce")
+    admissions["data_dimissione"] = pd.to_datetime(admissions["data_dimissione"], errors="coerce")
+    invalid_admissions = admissions[admissions["data_ricovero"] > admissions["data_dimissione"]]
     if not invalid_admissions.empty:
-        examples = invalid_admissions[["admission_id", "admit_ts", "discharge_ts"]].head(5)
+        examples = invalid_admissions[["id_ricovero", "data_ricovero", "data_dimissione"]].head(5)
         raise AssertionError(
-            "admissions: admit_ts must be <= discharge_ts. Examples:\n" + examples.to_string(index=False)
+            "admissions: data_ricovero must be <= data_dimissione. Examples:\n" + examples.to_string(index=False)
         )
 
-    if "length_of_stay_days" in admissions.columns:
-        los_days = (admissions["discharge_ts"] - admissions["admit_ts"]).dt.days
-        mismatch = admissions["length_of_stay_days"].notna() & los_days.notna() & (admissions["length_of_stay_days"] != los_days)
+    if "durata_degenza_giorni" in admissions.columns:
+        los_days = (admissions["data_dimissione"] - admissions["data_ricovero"]).dt.days
+        mismatch = admissions["durata_degenza_giorni"].notna() & los_days.notna() & (admissions["durata_degenza_giorni"] != los_days)
         if mismatch.any():
-            examples = admissions.loc[mismatch, ["admission_id", "length_of_stay_days"]].head(5)
+            examples = admissions.loc[mismatch, ["id_ricovero", "durata_degenza_giorni"]].head(5)
             raise AssertionError(
-                "admissions: length_of_stay_days must match discharge-admit in days. Examples:\n"
+                "admissions: durata_degenza_giorni must match data_dimissione-data_ricovero in days. Examples:\n"
                 + examples.to_string(index=False)
             )
 
     devices = tables["devices"].copy()
-    devices["purchase_date"] = pd.to_datetime(devices["purchase_date"], errors="coerce")
-    devices["last_calibration_date"] = pd.to_datetime(devices["last_calibration_date"], errors="coerce")
-    invalid_devices = devices[devices["last_calibration_date"] < devices["purchase_date"]]
+    devices["data_acquisto"] = pd.to_datetime(devices["data_acquisto"], errors="coerce")
+    devices["data_ultima_calibrazione"] = pd.to_datetime(devices["data_ultima_calibrazione"], errors="coerce")
+    invalid_devices = devices[devices["data_ultima_calibrazione"] < devices["data_acquisto"]]
     if not invalid_devices.empty:
-        examples = invalid_devices[["device_id", "purchase_date", "last_calibration_date"]].head(5)
+        examples = invalid_devices[["id_dispositivo", "data_acquisto", "data_ultima_calibrazione"]].head(5)
         raise AssertionError(
-            "devices: last_calibration_date must be >= purchase_date. Examples:\n"
+            "devices: data_ultima_calibrazione must be >= data_acquisto. Examples:\n"
             + examples.to_string(index=False)
         )

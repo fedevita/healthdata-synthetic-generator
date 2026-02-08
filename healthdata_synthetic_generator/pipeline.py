@@ -19,40 +19,40 @@ def build_metadata(real_tables: Dict[str, pd.DataFrame], metadata_path: Path) ->
     # Force categorical sdtypes for locale-sensitive fields to keep Italian values.
     categorical_fields = {
         "patients": [
-            "first_name",
-            "last_name",
-            "sex",
-            "city",
-            "address",
-            "postal_code",
-            "country",
+            "nome",
+            "cognome",
+            "sesso",
+            "citta",
+            "indirizzo",
+            "cap",
+            "paese",
             "email",
-            "phone",
-            "national_id",
-            "marital_status",
-            "primary_language",
-            "insurance_provider",
-            "insurance_plan",
-            "insurance_id",
-            "emergency_contact_name",
-            "emergency_contact_phone",
-            "blood_type",
+            "telefono",
+            "codice_fiscale",
+            "stato_civile",
+            "lingua_primaria",
+            "compagnia_assicurativa",
+            "piano_assicurativo",
+            "id_assicurazione",
+            "contatto_emergenza_nome",
+            "contatto_emergenza_telefono",
+            "gruppo_sanguigno",
         ],
         "staff": [
-            "first_name",
-            "last_name",
-            "role",
-            "department",
-            "employment_type",
+            "nome",
+            "cognome",
+            "ruolo",
+            "reparto",
+            "tipo_impiego",
             "email",
-            "phone",
-            "license_id",
+            "telefono",
+            "id_licenza",
         ],
-        "wards": ["ward_name", "specialty"],
-        "staff_assignments": ["shift"],
-        "devices": ["device_type", "manufacturer", "model", "serial_number", "status"],
-        "admissions": ["admission_type", "admission_source", "discharge_status"],
-        "diagnoses": ["icd10_code", "severity"],
+        "wards": ["nome_reparto", "specialita"],
+        "staff_assignments": ["turno"],
+        "devices": ["tipo_dispositivo", "produttore", "modello", "numero_serie", "stato"],
+        "admissions": ["tipo_ricovero", "provenienza_ricovero", "esito_dimissione"],
+        "diagnoses": ["codice_icd10", "gravita"],
     }
     for table_name, columns in categorical_fields.items():
         for column in columns:
@@ -78,8 +78,8 @@ def enforce_email_consistency(tables: Dict[str, pd.DataFrame], rng: np.random.Ge
         return cleaned.lower() if cleaned else "utente"
 
     def build_emails(df: pd.DataFrame, domain: str) -> pd.Series:
-        first = df.get("first_name", pd.Series(["utente"] * len(df))).astype(str)
-        last = df.get("last_name", pd.Series(["utente"] * len(df))).astype(str)
+        first = df.get("nome", pd.Series(["utente"] * len(df))).astype(str)
+        last = df.get("cognome", pd.Series(["utente"] * len(df))).astype(str)
         suffix = rng.integers(1, 10000, size=len(df))
         return [
             f"{normalize(fn)}.{normalize(ln)}{num}@{domain}"
@@ -100,8 +100,8 @@ def enforce_admission_order(tables: Dict[str, pd.DataFrame], rng: np.random.Gene
     if admissions is None or admissions.empty:
         return
 
-    admit_ts = pd.to_datetime(admissions["admit_ts"], errors="coerce")
-    discharge_ts = pd.to_datetime(admissions["discharge_ts"], errors="coerce")
+    admit_ts = pd.to_datetime(admissions["data_ricovero"], errors="coerce")
+    discharge_ts = pd.to_datetime(admissions["data_dimissione"], errors="coerce")
     valid_admit = admit_ts.notna()
     los = (discharge_ts - admit_ts).dt.days
     invalid_los = los.isna() | (los < 1) | (los > 30)
@@ -112,7 +112,7 @@ def enforce_admission_order(tables: Dict[str, pd.DataFrame], rng: np.random.Gene
 
     if valid_admit.any():
         discharge_ts = admit_ts + pd.to_timedelta(los, unit="D")
-        admissions["discharge_ts"] = discharge_ts
+        admissions["data_dimissione"] = discharge_ts
 
-    if "length_of_stay_days" in admissions.columns:
-        admissions["length_of_stay_days"] = los.where(valid_admit, admissions["length_of_stay_days"])
+    if "durata_degenza_giorni" in admissions.columns:
+        admissions["durata_degenza_giorni"] = los.where(valid_admit, admissions["durata_degenza_giorni"])
