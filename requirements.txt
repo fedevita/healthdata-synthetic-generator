@@ -2,3 +2,5 @@ sdv==1.33.1
 pandas==2.3.3
 numpy==2.4.2
 pyarrow==23.0.0
+pytest==8.3.5
+pandera==0.20.4
