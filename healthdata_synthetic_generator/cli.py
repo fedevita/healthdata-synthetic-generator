@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import shutil
 
 import numpy as np
 import sdv
@@ -29,6 +30,8 @@ def main() -> int:
     rng = np.random.default_rng(args.seed)
 
     out_dir = Path(args.out_dir)
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"SDV version: {sdv.__version__}")
