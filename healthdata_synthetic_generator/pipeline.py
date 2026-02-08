@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict
+import re
 
 import numpy as np
 import pandas as pd
@@ -69,6 +70,29 @@ def fit_and_sample(
     synthesizer = HMASynthesizer(metadata)
     synthesizer.fit(real_tables)
     return synthesizer.sample(scale=scale)
+
+
+def enforce_email_consistency(tables: Dict[str, pd.DataFrame], rng: np.random.Generator) -> None:
+    def normalize(value: str) -> str:
+        cleaned = re.sub(r"[^a-zA-Z]", "", value or "")
+        return cleaned.lower() if cleaned else "utente"
+
+    def build_emails(df: pd.DataFrame, domain: str) -> pd.Series:
+        first = df.get("first_name", pd.Series(["utente"] * len(df))).astype(str)
+        last = df.get("last_name", pd.Series(["utente"] * len(df))).astype(str)
+        suffix = rng.integers(1, 10000, size=len(df))
+        return [
+            f"{normalize(fn)}.{normalize(ln)}{num}@{domain}"
+            for fn, ln, num in zip(first, last, suffix)
+        ]
+
+    patients = tables.get("patients")
+    if patients is not None and not patients.empty and "email" in patients.columns:
+        patients["email"] = build_emails(patients, "example.it")
+
+    staff = tables.get("staff")
+    if staff is not None and not staff.empty and "email" in staff.columns:
+        staff["email"] = build_emails(staff, "ospedale.example.it")
 
 
 def enforce_admission_order(tables: Dict[str, pd.DataFrame], rng: np.random.Generator) -> None:
