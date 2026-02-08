@@ -99,9 +99,11 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
     date_1950 = pd.Timestamp("1950-01-01")
     date_2010 = pd.Timestamp("2010-12-31")
     date_2010_start = pd.Timestamp("2010-01-01")
+    date_2024_start = pd.Timestamp("2024-01-01")
     date_2024_end = pd.Timestamp("2024-12-31")
     date_2025_start = pd.Timestamp("2025-01-01")
     date_2026_end = pd.Timestamp("2026-12-31")
+    date_2018_start = pd.Timestamp("2018-01-01")
 
     return {
         "wards": pa.DataFrameSchema(
@@ -122,6 +124,8 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
         "patients": pa.DataFrameSchema(
             {
                 "patient_id": pa.Column(str),
+                "first_name": pa.Column(str),
+                "last_name": pa.Column(str),
                 "sex": pa.Column(str, Check.isin({"F", "M"})),
                 "birth_date": pa.Column(
                     pa.DateTime,
@@ -129,12 +133,35 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                     coerce=True,
                 ),
                 "city": pa.Column(str),
+                "address": pa.Column(str),
+                "postal_code": pa.Column(str, coerce=True),
+                "country": pa.Column(str, Check.isin({"Italy"})),
+                "email": pa.Column(str),
+                "phone": pa.Column(str),
+                "national_id": pa.Column(str),
+                "marital_status": pa.Column(str, Check.isin({"single", "married", "divorced", "widowed"})),
+                "primary_language": pa.Column(str, Check.isin({"it", "en", "es", "fr", "de"})),
+                "insurance_provider": pa.Column(str),
+                "insurance_plan": pa.Column(str, Check.isin({"basic", "standard", "premium"})),
+                "insurance_id": pa.Column(str),
+                "emergency_contact_name": pa.Column(str),
+                "emergency_contact_phone": pa.Column(str),
+                "height_cm": pa.Column(int, Check.between(140, 200)),
+                "weight_kg": pa.Column(int, Check.between(45, 120)),
+                "blood_type": pa.Column(str, Check.isin({"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"})),
             }
         ),
         "staff": pa.DataFrameSchema(
             {
                 "staff_id": pa.Column(str),
+                "first_name": pa.Column(str),
+                "last_name": pa.Column(str),
                 "role": pa.Column(str),
+                "department": pa.Column(str),
+                "employment_type": pa.Column(str, Check.isin({"Full-time", "Part-time", "Contractor"})),
+                "email": pa.Column(str),
+                "phone": pa.Column(str),
+                "license_id": pa.Column(str),
                 "hire_date": pa.Column(
                     pa.DateTime,
                     Check.between(date_2010_start, date_2024_end),
@@ -155,6 +182,20 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "device_id": pa.Column(str),
                 "ward_id": pa.Column(str),
                 "device_type": pa.Column(str, Check.isin({"ECG", "PulseOx", "BP Monitor", "Thermometer"})),
+                "manufacturer": pa.Column(str),
+                "model": pa.Column(str),
+                "serial_number": pa.Column(str),
+                "status": pa.Column(str, Check.isin({"Active", "Maintenance", "Retired"})),
+                "purchase_date": pa.Column(
+                    pa.DateTime,
+                    Check.between(date_2018_start, date_2024_end),
+                    coerce=True,
+                ),
+                "last_calibration_date": pa.Column(
+                    pa.DateTime,
+                    Check.between(date_2024_start, date_2026_end),
+                    coerce=True,
+                ),
             }
         ),
         "admissions": pa.DataFrameSchema(
@@ -164,6 +205,10 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "ward_id": pa.Column(str),
                 "admit_ts": pa.Column(pa.DateTime, coerce=True),
                 "discharge_ts": pa.Column(pa.DateTime, coerce=True),
+                "length_of_stay_days": pa.Column(int, Check.between(1, 30)),
+                "admission_type": pa.Column(str, Check.isin({"Emergency", "Elective", "Urgent"})),
+                "admission_source": pa.Column(str, Check.isin({"ER", "Referral", "Transfer"})),
+                "discharge_status": pa.Column(str, Check.isin({"Home", "Transfer", "Rehab", "Deceased"})),
             }
         ),
         "diagnoses": pa.DataFrameSchema(
@@ -188,6 +233,9 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "spo2": pa.Column(int, Check.between(90, 100)),
                 "systolic_bp": pa.Column(int, Check.between(95, 160)),
                 "diastolic_bp": pa.Column(int, Check.between(60, 100)),
+                "temperature_c": pa.Column(float, Check.between(35.0, 40.5)),
+                "respiratory_rate": pa.Column(int, Check.between(10, 30)),
+                "glucose_mg_dl": pa.Column(int, Check.between(70, 180)),
             }
         ),
     }
@@ -238,4 +286,25 @@ def validate_domain_constraints(tables: Dict[str, pd.DataFrame]) -> None:
         examples = invalid_admissions[["admission_id", "admit_ts", "discharge_ts"]].head(5)
         raise AssertionError(
             "admissions: admit_ts must be <= discharge_ts. Examples:\n" + examples.to_string(index=False)
+        )
+
+    if "length_of_stay_days" in admissions.columns:
+        los_days = (admissions["discharge_ts"] - admissions["admit_ts"]).dt.days
+        mismatch = admissions["length_of_stay_days"].notna() & los_days.notna() & (admissions["length_of_stay_days"] != los_days)
+        if mismatch.any():
+            examples = admissions.loc[mismatch, ["admission_id", "length_of_stay_days"]].head(5)
+            raise AssertionError(
+                "admissions: length_of_stay_days must match discharge-admit in days. Examples:\n"
+                + examples.to_string(index=False)
+            )
+
+    devices = tables["devices"].copy()
+    devices["purchase_date"] = pd.to_datetime(devices["purchase_date"], errors="coerce")
+    devices["last_calibration_date"] = pd.to_datetime(devices["last_calibration_date"], errors="coerce")
+    invalid_devices = devices[devices["last_calibration_date"] < devices["purchase_date"]]
+    if not invalid_devices.empty:
+        examples = invalid_devices[["device_id", "purchase_date", "last_calibration_date"]].head(5)
+        raise AssertionError(
+            "devices: last_calibration_date must be >= purchase_date. Examples:\n"
+            + examples.to_string(index=False)
         )

@@ -36,8 +36,17 @@ def enforce_admission_order(tables: Dict[str, pd.DataFrame], rng: np.random.Gene
 
     admit_ts = pd.to_datetime(admissions["admit_ts"], errors="coerce")
     discharge_ts = pd.to_datetime(admissions["discharge_ts"], errors="coerce")
-    invalid = admit_ts.notna() & discharge_ts.notna() & (discharge_ts < admit_ts)
-    if invalid.any():
-        offsets = rng.integers(1, 15, size=int(invalid.sum()), dtype=np.int64)
-        discharge_ts.loc[invalid] = admit_ts.loc[invalid] + pd.to_timedelta(offsets, unit="D")
+    valid_admit = admit_ts.notna()
+    los = (discharge_ts - admit_ts).dt.days
+    invalid_los = los.isna() | (los < 1) | (los > 30)
+
+    if invalid_los.any():
+        offsets = rng.integers(1, 31, size=int(invalid_los.sum()), dtype=np.int64)
+        los.loc[invalid_los] = offsets
+
+    if valid_admit.any():
+        discharge_ts = admit_ts + pd.to_timedelta(los, unit="D")
         admissions["discharge_ts"] = discharge_ts
+
+    if "length_of_stay_days" in admissions.columns:
+        admissions["length_of_stay_days"] = los.where(valid_admit, admissions["length_of_stay_days"])
