@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run generator (module)",
+      "type": "python",
+      "request": "launch",
+      "module": "healthdata_synthetic_generator",
+      "args": [],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Pytest",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-q"],
+      "console": "integratedTerminal"
+    }
+  ]
+}

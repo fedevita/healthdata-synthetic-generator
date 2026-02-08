@@ -1,3 +1,5 @@
+"""Data quality checks for generated datasets."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -8,18 +10,7 @@ import pandera as pa
 from pandera import Check
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-OUT_DIR = PROJECT_ROOT / "out"
-
-TABLE_PATHS: Dict[str, Path] = {
-    "patients": OUT_DIR / "ehr" / "patients",
-    "admissions": OUT_DIR / "ehr" / "admissions",
-    "diagnoses": OUT_DIR / "ehr" / "diagnoses",
-    "wards": OUT_DIR / "erp" / "wards",
-    "staff": OUT_DIR / "erp" / "staff",
-    "staff_assignments": OUT_DIR / "erp" / "staff_assignments",
-    "devices": OUT_DIR / "iot" / "devices",
-    "vital_signs": OUT_DIR / "iot" / "vital_signs",
-}
+DEFAULT_OUT_DIR = PROJECT_ROOT / "out"
 
 PKS: Dict[str, str] = {
     "patients": "patient_id",
@@ -44,6 +35,19 @@ FKS: List[Tuple[str, str, str, str]] = [
 ]
 
 
+def get_table_paths(out_dir: Path = DEFAULT_OUT_DIR) -> Dict[str, Path]:
+    return {
+        "patients": out_dir / "ehr" / "patients",
+        "admissions": out_dir / "ehr" / "admissions",
+        "diagnoses": out_dir / "ehr" / "diagnoses",
+        "wards": out_dir / "erp" / "wards",
+        "staff": out_dir / "erp" / "staff",
+        "staff_assignments": out_dir / "erp" / "staff_assignments",
+        "devices": out_dir / "iot" / "devices",
+        "vital_signs": out_dir / "iot" / "vital_signs",
+    }
+
+
 def load_table(base_path: Path) -> pd.DataFrame:
     parquet_path = base_path.with_suffix(".parquet")
     csv_path = base_path.with_suffix(".csv")
@@ -58,12 +62,12 @@ def load_table(base_path: Path) -> pd.DataFrame:
     )
 
 
-def load_all_tables() -> Dict[str, pd.DataFrame]:
-    if not OUT_DIR.exists():
-        raise AssertionError("Missing out/ directory. Run generate_synthetic_data.py first.")
+def load_all_tables(out_dir: Path = DEFAULT_OUT_DIR) -> Dict[str, pd.DataFrame]:
+    if not out_dir.exists():
+        raise AssertionError("Missing out/ directory. Run the generator module first.")
 
     tables: Dict[str, pd.DataFrame] = {}
-    for name, path in TABLE_PATHS.items():
+    for name, path in get_table_paths(out_dir).items():
         tables[name] = load_table(path)
     return tables
 
@@ -189,35 +193,32 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
     }
 
 
-def test_files_exist() -> None:
-    if not OUT_DIR.exists():
-        raise AssertionError("Missing out/ directory. Run generate_synthetic_data.py first.")
+def validate_files_exist(out_dir: Path = DEFAULT_OUT_DIR) -> None:
+    if not out_dir.exists():
+        raise AssertionError("Missing out/ directory. Run the generator module first.")
 
     missing: List[str] = []
-    for name, base in TABLE_PATHS.items():
+    for name, base in get_table_paths(out_dir).items():
         if not base.with_suffix(".parquet").exists() and not base.with_suffix(".csv").exists():
             missing.append(name)
 
     if missing:
         raise AssertionError(
-            "Missing dataset files for tables: " + ", ".join(missing) + ". Run generate_synthetic_data.py first."
+            "Missing dataset files for tables: " + ", ".join(missing) + ". Run the generator module first."
         )
 
 
-def test_primary_keys() -> None:
-    tables = load_all_tables()
+def validate_primary_keys(tables: Dict[str, pd.DataFrame]) -> None:
     for table_name, pk in PKS.items():
         assert_pk(tables[table_name], table_name, pk)
 
 
-def test_foreign_keys_integrity() -> None:
-    tables = load_all_tables()
+def validate_foreign_keys(tables: Dict[str, pd.DataFrame]) -> None:
     for child, child_fk, parent, parent_pk in FKS:
         assert_fk(tables[child], child_fk, tables[parent], parent_pk, f"{child}.{child_fk}->{parent}.{parent_pk}")
 
 
-def test_domain_constraints() -> None:
-    tables = load_all_tables()
+def validate_domain_constraints(tables: Dict[str, pd.DataFrame]) -> None:
     schemas = build_schemas()
 
     for table_name, schema in schemas.items():

@@ -1,6 +1,6 @@
 # healthdata-synthetic-generator
 
-Minimal script-first project for generating synthetic healthcare datasets in Python using SDV.
+Minimal project for generating synthetic healthcare datasets in Python using SDV.
 
 ## Prerequisites
 
@@ -10,8 +10,7 @@ Minimal script-first project for generating synthetic healthcare datasets in Pyt
 ## Run
 
 ```bash
-# TODO: add the exact command once generation logic is implemented
-python generate_synthetic_data.py
+python -m healthdata_synthetic_generator
 ```
 
 ## Output
