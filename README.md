@@ -322,14 +322,16 @@ Campi:
   - id_dispositivo: chiave esterna verso dispositivi.id_dispositivo. Tipo: VARCHAR.
 - Timestamp
   - data_misurazione: datetime della misurazione. Tipo: TIMESTAMP_NTZ.
-- Parametri vitali
+- Parametri vitali (Compilati condizionalmente in base al tipo di dispositivo)
   - frequenza_cardiaca: valore numerico. Tipo: NUMBER(3,0).
-  - saturazione_ossigeno: valore numerico rappresentato come categorico nei metadati. Tipo: NUMBER(3,0).
+  - saturazione_ossigeno: valore numerico. Tipo: NUMBER(3,0).
   - pressione_sistolica: valore numerico. Tipo: NUMBER(3,0).
   - pressione_diastolica: valore numerico. Tipo: NUMBER(3,0).
   - temperatura_c: temperatura corporea in Celsius. Tipo: FLOAT.
   - frequenza_respiratoria: atti respiratori al minuto. Tipo: NUMBER(3,0).
   - glicemia_mg_dl: glicemia in mg/dL. Tipo: NUMBER(3,0).
+
+**Nota**: I campi dei parametri vitali sono popolati solo se il dispositivo associato supporta quella misurazione (es. Termometro popola solo `temperatura_c`). Gli altri campi saranno `NULL`.
 
 Snippet SQL (Snowflake):
 
@@ -350,7 +352,7 @@ CREATE OR REPLACE TABLE parametri_vitali (
   CONSTRAINT fk_parametri_vitali_pazienti FOREIGN KEY (id_paziente) REFERENCES pazienti(id_paziente),
   CONSTRAINT fk_parametri_vitali_dispositivi FOREIGN KEY (id_dispositivo) REFERENCES dispositivi(id_dispositivo)
 )
-COMMENT = 'Misurazioni vitali';
+COMMENT = 'Misurazioni vitali sparse';
 ```
 
 ### Relazioni
