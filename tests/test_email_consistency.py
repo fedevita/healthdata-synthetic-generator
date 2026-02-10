@@ -25,7 +25,7 @@ def _email_local_matches(nome: str, cognome: str, email: str) -> bool:
 
 def test_patient_emails_match_names() -> None:
     tables = dq.load_all_tables()
-    patients = tables["patients"]
+    patients = tables["pazienti"]
     prefixes = patients.apply(
         lambda row: _email_prefix(row["nome"], row["cognome"]), axis=1
     )
@@ -39,7 +39,7 @@ def test_patient_emails_match_names() -> None:
 
 def test_staff_emails_match_names() -> None:
     tables = dq.load_all_tables()
-    staff = tables["staff"]
+    staff = tables["personale"]
     prefixes = staff.apply(
         lambda row: _email_prefix(row["nome"], row["cognome"]), axis=1
     )

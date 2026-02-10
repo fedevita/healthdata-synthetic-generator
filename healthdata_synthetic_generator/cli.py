@@ -37,14 +37,14 @@ def main() -> int:
     print(f"SDV version: {sdv.__version__}")
 
     table_order = [
-        "wards",
-        "patients",
-        "staff",
-        "staff_assignments",
-        "devices",
-        "admissions",
-        "diagnoses",
-        "vital_signs",
+        "reparti",
+        "pazienti",
+        "personale",
+        "assegnazioni",
+        "dispositivi",
+        "ricoveri",
+        "diagnosi",
+        "parametri_vitali",
     ]
 
     real_tables = build_seed_tables(rng)

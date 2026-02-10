@@ -13,17 +13,17 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
     Build seed tables for SDV training.
 
     Must return a dict[str, DataFrame] with at least these tables:
-    patients, admissions, diagnoses, wards, staff, staff_assignments, devices, vital_signs
+    pazienti, ricoveri, diagnosi, reparti, personale, assegnazioni, dispositivi, parametri_vitali
 
         Each table must include its PK and required FKs:
-            admissions.id_paziente -> patients.id_paziente
-            admissions.id_reparto -> wards.id_reparto
-            diagnoses.id_ricovero -> admissions.id_ricovero
-            staff_assignments.id_staff -> staff.id_staff
-            staff_assignments.id_reparto -> wards.id_reparto
-            devices.id_reparto -> wards.id_reparto
-            vital_signs.id_paziente -> patients.id_paziente
-            vital_signs.id_dispositivo -> devices.id_dispositivo
+            ricoveri.id_paziente -> pazienti.id_paziente
+            ricoveri.id_reparto -> reparti.id_reparto
+            diagnosi.id_ricovero -> ricoveri.id_ricovero
+            assegnazioni.id_staff -> personale.id_staff
+            assegnazioni.id_reparto -> reparti.id_reparto
+            dispositivi.id_reparto -> reparti.id_reparto
+            parametri_vitali.id_paziente -> pazienti.id_paziente
+            parametri_vitali.id_dispositivo -> dispositivi.id_dispositivo
     """
     n_wards = 10
     n_patients = 200
@@ -208,12 +208,12 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
     })
 
     return {
-        "wards": wards,
-        "patients": patients,
-        "staff": staff,
-        "staff_assignments": staff_assignments,
-        "devices": devices,
-        "admissions": admissions,
-        "diagnoses": diagnoses,
-        "vital_signs": vital_signs,
+        "reparti": wards,
+        "pazienti": patients,
+        "personale": staff,
+        "assegnazioni": staff_assignments,
+        "dispositivi": devices,
+        "ricoveri": admissions,
+        "diagnosi": diagnoses,
+        "parametri_vitali": vital_signs,
     }

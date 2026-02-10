@@ -21,13 +21,13 @@ Lo script produrra dataset sanitari sintetici (ad esempio file CSV o Parquet).
 
 Il generatore produce un dataset multi-tabella organizzato in tre domini:
 
-- ehr: dati clinici (patients, admissions, diagnoses)
-- erp: dati operativi (wards, staff, staff_assignments)
-- iot: dispositivi e misurazioni (devices, vital_signs)
+- ehr: dati clinici (pazienti, ricoveri, diagnosi)
+- erp: dati operativi (reparti, personale, assegnazioni)
+- iot: dispositivi e misurazioni (dispositivi, parametri_vitali)
 
 ### Tabelle e campi
 
-#### wards (erp/wards)
+#### reparti (erp/reparti)
 
 Chiave primaria: id_reparto
 
@@ -42,16 +42,16 @@ Campi:
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE wards (
+CREATE OR REPLACE TABLE reparti (
   id_reparto VARCHAR COMMENT 'Identificatore del reparto',
   nome_reparto VARCHAR COMMENT 'Nome del reparto',
   specialita VARCHAR COMMENT 'Specialita del reparto',
-  CONSTRAINT pk_wards PRIMARY KEY (id_reparto)
+  CONSTRAINT pk_reparti PRIMARY KEY (id_reparto)
 )
 COMMENT = 'Reparti ospedalieri';
 ```
 
-#### patients (ehr/patients)
+#### pazienti (ehr/pazienti)
 
 Chiave primaria: id_paziente
 
@@ -89,7 +89,7 @@ Campi:
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE patients (
+CREATE OR REPLACE TABLE pazienti (
   id_paziente VARCHAR COMMENT 'Identificatore paziente',
   nome VARCHAR COMMENT 'Nome',
   cognome VARCHAR COMMENT 'Cognome',
@@ -112,17 +112,17 @@ CREATE OR REPLACE TABLE patients (
   altezza_cm NUMBER(3,0) COMMENT 'Altezza in cm',
   peso_kg NUMBER(3,0) COMMENT 'Peso in kg',
   gruppo_sanguigno VARCHAR COMMENT 'Gruppo sanguigno',
-  CONSTRAINT pk_patients PRIMARY KEY (id_paziente),
-  CONSTRAINT ck_patients_sesso CHECK (sesso IN ('F', 'M')),
-  CONSTRAINT ck_patients_stato_civile CHECK (stato_civile IN ('celibe/nubile', 'sposato/a', 'divorziato/a', 'vedovo/a')),
-  CONSTRAINT ck_patients_lingua_primaria CHECK (lingua_primaria IN ('it')),
-  CONSTRAINT ck_patients_piano_assicurativo CHECK (piano_assicurativo IN ('basic', 'standard', 'premium')),
-  CONSTRAINT ck_patients_gruppo_sanguigno CHECK (gruppo_sanguigno IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'))
+  CONSTRAINT pk_pazienti PRIMARY KEY (id_paziente),
+  CONSTRAINT ck_pazienti_sesso CHECK (sesso IN ('F', 'M')),
+  CONSTRAINT ck_pazienti_stato_civile CHECK (stato_civile IN ('celibe/nubile', 'sposato/a', 'divorziato/a', 'vedovo/a')),
+  CONSTRAINT ck_pazienti_lingua_primaria CHECK (lingua_primaria IN ('it')),
+  CONSTRAINT ck_pazienti_piano_assicurativo CHECK (piano_assicurativo IN ('basic', 'standard', 'premium')),
+  CONSTRAINT ck_pazienti_gruppo_sanguigno CHECK (gruppo_sanguigno IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'))
 )
 COMMENT = 'Anagrafica pazienti';
 ```
 
-#### staff (erp/staff)
+#### personale (erp/personaleersonale)
 
 Chiave primaria: id_staff
 
@@ -146,7 +146,7 @@ Campi:
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE staff (
+CREATE OR REPLACE TABLE personale (
   id_staff VARCHAR COMMENT 'Identificatore staff',
   nome VARCHAR COMMENT 'Nome',
   cognome VARCHAR COMMENT 'Cognome',
@@ -157,13 +157,13 @@ CREATE OR REPLACE TABLE staff (
   telefono VARCHAR COMMENT 'Telefono',
   id_licenza VARCHAR COMMENT 'Identificativo professionale',
   data_assunzione DATE COMMENT 'Data assunzione',
-  CONSTRAINT pk_staff PRIMARY KEY (id_staff),
-  CONSTRAINT ck_staff_tipo_impiego CHECK (tipo_impiego IN ('Tempo pieno', 'Part-time', 'Contratto'))
+  CONSTRAINT pk_personale PRIMARY KEY (id_staff),
+  CONSTRAINT ck_personale_tipo_impiego CHECK (tipo_impiego IN ('Tempo pieno', 'Part-time', 'Contratto'))
 )
 COMMENT = 'Anagrafica staff';
 ```
 
-#### staff_assignments (erp/staff_assignments)
+#### assegnazioni (erp/assegnazioni)
 
 Chiave primaria: id_assegnazione
 
@@ -172,28 +172,28 @@ Campi:
 - Identificativi
   - id_assegnazione: identificatore stringa dell'assegnazione. Tipo: VARCHAR.
 - Relazioni
-  - id_staff: chiave esterna verso staff.id_staff. Tipo: VARCHAR.
-  - id_reparto: chiave esterna verso wards.id_reparto. Tipo: VARCHAR.
+  - id_staff: chiave esterna verso personale.id_staff. Tipo: VARCHAR.
+  - id_reparto: chiave esterna verso reparti.id_reparto. Tipo: VARCHAR.
 - Turno
   - turno: valore categorico (Giorno, Notte, Sera nel seed). Tipo: VARCHAR.
 
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE staff_assignments (
+CREATE OR REPLACE TABLE assegnazioni (
   id_assegnazione VARCHAR COMMENT 'Identificatore assegnazione',
   id_staff VARCHAR COMMENT 'Riferimento staff',
   id_reparto VARCHAR COMMENT 'Riferimento reparto',
   turno VARCHAR COMMENT 'Turno',
-  CONSTRAINT pk_staff_assignments PRIMARY KEY (id_assegnazione),
-  CONSTRAINT fk_staff_assignments_staff FOREIGN KEY (id_staff) REFERENCES staff(id_staff),
-  CONSTRAINT fk_staff_assignments_wards FOREIGN KEY (id_reparto) REFERENCES wards(id_reparto),
-  CONSTRAINT ck_staff_assignments_turno CHECK (turno IN ('Giorno', 'Notte', 'Sera'))
+  CONSTRAINT pk_assegnazioni PRIMARY KEY (id_assegnazione),
+  CONSTRAINT fk_assegnazioni_personale FOREIGN KEY (id_staff) REFERENCES personale(id_staff),
+  CONSTRAINT fk_assegnazioni_reparti FOREIGN KEY (id_reparto) REFERENCES reparti(id_reparto),
+  CONSTRAINT ck_assegnazioni_turno CHECK (turno IN ('Giorno', 'Notte', 'Sera'))
 )
 COMMENT = 'Assegnazioni del personale ai reparti';
 ```
 
-#### devices (iot/devices)
+#### dispositivi (iot/dispositivi)
 
 Chiave primaria: id_dispositivo
 
@@ -203,7 +203,7 @@ Campi:
   - id_dispositivo: identificatore stringa del dispositivo. Tipo: VARCHAR.
   - numero_serie: numero di serie. Tipo: VARCHAR.
 - Relazioni
-  - id_reparto: chiave esterna verso wards.id_reparto. Tipo: VARCHAR.
+  - id_reparto: chiave esterna verso reparti.id_reparto. Tipo: VARCHAR.
 - Descrittivi
   - tipo_dispositivo: valore categorico (ECG, Pulsossimetro, Sfigmomanometro, Termometro nel seed). Tipo: VARCHAR.
   - produttore: produttore del dispositivo. Tipo: VARCHAR.
@@ -216,7 +216,7 @@ Campi:
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE devices (
+CREATE OR REPLACE TABLE dispositivi (
   id_dispositivo VARCHAR COMMENT 'Identificatore dispositivo',
   id_reparto VARCHAR COMMENT 'Riferimento reparto',
   tipo_dispositivo VARCHAR COMMENT 'Tipo dispositivo',
@@ -226,16 +226,16 @@ CREATE OR REPLACE TABLE devices (
   stato VARCHAR COMMENT 'Stato operativo',
   data_acquisto DATE COMMENT 'Data acquisto',
   data_ultima_calibrazione DATE COMMENT 'Ultima calibrazione',
-  CONSTRAINT pk_devices PRIMARY KEY (id_dispositivo),
-  CONSTRAINT fk_devices_wards FOREIGN KEY (id_reparto) REFERENCES wards(id_reparto),
-  CONSTRAINT ck_devices_tipo_dispositivo CHECK (tipo_dispositivo IN ('ECG', 'Pulsossimetro', 'Sfigmomanometro', 'Termometro')),
-  CONSTRAINT ck_devices_stato CHECK (stato IN ('Attivo', 'Manutenzione', 'Ritirato')),
-  CONSTRAINT ck_devices_calibrazione CHECK (data_ultima_calibrazione >= data_acquisto)
+  CONSTRAINT pk_dispositivi PRIMARY KEY (id_dispositivo),
+  CONSTRAINT fk_dispositivi_reparti FOREIGN KEY (id_reparto) REFERENCES reparti(id_reparto),
+  CONSTRAINT ck_dispositivi_tipo_dispositivo CHECK (tipo_dispositivo IN ('ECG', 'Pulsossimetro', 'Sfigmomanometro', 'Termometro')),
+  CONSTRAINT ck_dispositivi_stato CHECK (stato IN ('Attivo', 'Manutenzione', 'Ritirato')),
+  CONSTRAINT ck_dispositivi_calibrazione CHECK (data_ultima_calibrazione >= data_acquisto)
 )
 COMMENT = 'Dispositivi IoT';
 ```
 
-#### admissions (ehr/admissions)
+#### ricoveri (ehr/ricoveri)
 
 Chiave primaria: id_ricovero
 
@@ -244,8 +244,8 @@ Campi:
 - Identificativi
   - id_ricovero: identificatore stringa del ricovero. Tipo: VARCHAR.
 - Relazioni
-  - id_paziente: chiave esterna verso patients.id_paziente. Tipo: VARCHAR.
-  - id_reparto: chiave esterna verso wards.id_reparto. Tipo: VARCHAR.
+  - id_paziente: chiave esterna verso pazienti.id_paziente. Tipo: VARCHAR.
+  - id_reparto: chiave esterna verso reparti.id_reparto. Tipo: VARCHAR.
 - Date e durata
   - data_ricovero: datetime del ricovero. Tipo: TIMESTAMP_NTZ.
   - data_dimissione: datetime della dimissione. Tipo: TIMESTAMP_NTZ.
@@ -258,7 +258,7 @@ Campi:
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE admissions (
+CREATE OR REPLACE TABLE ricoveri (
   id_ricovero VARCHAR COMMENT 'Identificatore ricovero',
   id_paziente VARCHAR COMMENT 'Riferimento paziente',
   id_reparto VARCHAR COMMENT 'Riferimento reparto',
@@ -268,19 +268,19 @@ CREATE OR REPLACE TABLE admissions (
   tipo_ricovero VARCHAR COMMENT 'Tipo di ricovero',
   provenienza_ricovero VARCHAR COMMENT 'Provenienza',
   esito_dimissione VARCHAR COMMENT 'Esito dimissione',
-  CONSTRAINT pk_admissions PRIMARY KEY (id_ricovero),
-  CONSTRAINT fk_admissions_patients FOREIGN KEY (id_paziente) REFERENCES patients(id_paziente),
-  CONSTRAINT fk_admissions_wards FOREIGN KEY (id_reparto) REFERENCES wards(id_reparto),
-  CONSTRAINT ck_admissions_tipo CHECK (tipo_ricovero IN ('Emergenza', 'Elettivo', 'Urgente')),
-  CONSTRAINT ck_admissions_provenienza CHECK (provenienza_ricovero IN ('PS', 'Invio', 'Trasferimento')),
-  CONSTRAINT ck_admissions_esito CHECK (esito_dimissione IN ('Domicilio', 'Trasferimento', 'Riabilitazione', 'Deceduto')),
-  CONSTRAINT ck_admissions_degenza CHECK (durata_degenza_giorni BETWEEN 1 AND 30),
-  CONSTRAINT ck_admissions_date CHECK (data_dimissione >= data_ricovero)
+  CONSTRAINT pk_ricoveri PRIMARY KEY (id_ricovero),
+  CONSTRAINT fk_ricoveri_pazienti FOREIGN KEY (id_paziente) REFERENCES pazienti(id_paziente),
+  CONSTRAINT fk_ricoveri_reparti FOREIGN KEY (id_reparto) REFERENCES reparti(id_reparto),
+  CONSTRAINT ck_ricoveri_tipo CHECK (tipo_ricovero IN ('Emergenza', 'Elettivo', 'Urgente')),
+  CONSTRAINT ck_ricoveri_provenienza CHECK (provenienza_ricovero IN ('PS', 'Invio', 'Trasferimento')),
+  CONSTRAINT ck_ricoveri_esito CHECK (esito_dimissione IN ('Domicilio', 'Trasferimento', 'Riabilitazione', 'Deceduto')),
+  CONSTRAINT ck_ricoveri_degenza CHECK (durata_degenza_giorni BETWEEN 1 AND 30),
+  CONSTRAINT ck_ricoveri_date CHECK (data_dimissione >= data_ricovero)
 )
 COMMENT = 'Ricoveri';
 ```
 
-#### diagnoses (ehr/diagnoses)
+#### diagnosi (ehr/diagnosi)
 
 Chiave primaria: id_diagnosi
 
@@ -289,7 +289,7 @@ Campi:
 - Identificativi
   - id_diagnosi: identificatore stringa della diagnosi. Tipo: VARCHAR.
 - Relazioni
-  - id_ricovero: chiave esterna verso admissions.id_ricovero. Tipo: VARCHAR.
+  - id_ricovero: chiave esterna verso ricoveri.id_ricovero. Tipo: VARCHAR.
 - Codifica clinica
   - codice_icd10: codice diagnostico categorico (I10, E11, J18, K21, M54, N39 nel seed). Tipo: VARCHAR.
   - gravita: valore categorico (bassa, media, alta). Tipo: VARCHAR.
@@ -297,19 +297,19 @@ Campi:
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE diagnoses (
+CREATE OR REPLACE TABLE diagnosi (
   id_diagnosi VARCHAR COMMENT 'Identificatore diagnosi',
   id_ricovero VARCHAR COMMENT 'Riferimento ricovero',
   codice_icd10 VARCHAR COMMENT 'Codice ICD10',
   gravita VARCHAR COMMENT 'Gravita',
-  CONSTRAINT pk_diagnoses PRIMARY KEY (id_diagnosi),
-  CONSTRAINT fk_diagnoses_admissions FOREIGN KEY (id_ricovero) REFERENCES admissions(id_ricovero),
-  CONSTRAINT ck_diagnoses_gravita CHECK (gravita IN ('bassa', 'media', 'alta'))
+  CONSTRAINT pk_diagnosi PRIMARY KEY (id_diagnosi),
+  CONSTRAINT fk_diagnosi_ricoveri FOREIGN KEY (id_ricovero) REFERENCES ricoveri(id_ricovero),
+  CONSTRAINT ck_diagnosi_gravita CHECK (gravita IN ('bassa', 'media', 'alta'))
 )
 COMMENT = 'Diagnosi associate ai ricoveri';
 ```
 
-#### vital_signs (iot/vital_signs)
+#### parametri_vitali (iot/parametri_vitali)
 
 Chiave primaria: id_misurazione
 
@@ -318,8 +318,8 @@ Campi:
 - Identificativi
   - id_misurazione: identificatore stringa della misurazione. Tipo: VARCHAR.
 - Relazioni
-  - id_paziente: chiave esterna verso patients.id_paziente. Tipo: VARCHAR.
-  - id_dispositivo: chiave esterna verso devices.id_dispositivo. Tipo: VARCHAR.
+  - id_paziente: chiave esterna verso pazienti.id_paziente. Tipo: VARCHAR.
+  - id_dispositivo: chiave esterna verso dispositivi.id_dispositivo. Tipo: VARCHAR.
 - Timestamp
   - data_misurazione: datetime della misurazione. Tipo: TIMESTAMP_NTZ.
 - Parametri vitali
@@ -334,7 +334,7 @@ Campi:
 Snippet SQL (Snowflake):
 
 ```sql
-CREATE OR REPLACE TABLE vital_signs (
+CREATE OR REPLACE TABLE parametri_vitali (
   id_misurazione VARCHAR COMMENT 'Identificatore misurazione',
   id_paziente VARCHAR COMMENT 'Riferimento paziente',
   id_dispositivo VARCHAR COMMENT 'Riferimento dispositivo',
@@ -346,9 +346,9 @@ CREATE OR REPLACE TABLE vital_signs (
   temperatura_c FLOAT COMMENT 'Temperatura corporea in C',
   frequenza_respiratoria NUMBER(3,0) COMMENT 'Atti respiratori/min',
   glicemia_mg_dl NUMBER(3,0) COMMENT 'Glicemia mg/dL',
-  CONSTRAINT pk_vital_signs PRIMARY KEY (id_misurazione),
-  CONSTRAINT fk_vital_signs_patients FOREIGN KEY (id_paziente) REFERENCES patients(id_paziente),
-  CONSTRAINT fk_vital_signs_devices FOREIGN KEY (id_dispositivo) REFERENCES devices(id_dispositivo)
+  CONSTRAINT pk_parametri_vitali PRIMARY KEY (id_misurazione),
+  CONSTRAINT fk_parametri_vitali_pazienti FOREIGN KEY (id_paziente) REFERENCES pazienti(id_paziente),
+  CONSTRAINT fk_parametri_vitali_dispositivi FOREIGN KEY (id_dispositivo) REFERENCES dispositivi(id_dispositivo)
 )
 COMMENT = 'Misurazioni vitali';
 ```
@@ -357,13 +357,13 @@ COMMENT = 'Misurazioni vitali';
 
 I metadati definiscono le seguenti relazioni (genitore -> figlio):
 
-- wards.id_reparto -> staff_assignments.id_reparto
-- wards.id_reparto -> devices.id_reparto
-- wards.id_reparto -> admissions.id_reparto
-- patients.id_paziente -> admissions.id_paziente
-- patients.id_paziente -> vital_signs.id_paziente
-- staff.id_staff -> staff_assignments.id_staff
-- devices.id_dispositivo -> vital_signs.id_dispositivo
-- admissions.id_ricovero -> diagnoses.id_ricovero
+- reparti.id_reparto -> assegnazioni.id_reparto
+- reparti.id_reparto -> dispositivi.id_reparto
+- reparti.id_reparto -> ricoveri.id_reparto
+- pazienti.id_paziente -> ricoveri.id_paziente
+- pazienti.id_paziente -> parametri_vitali.id_paziente
+- personale.id_staff -> assegnazioni.id_staff
+- dispositivi.id_dispositivo -> parametri_vitali.id_dispositivo
+- ricoveri.id_ricovero -> diagnosi.id_ricovero
 
 Queste relazioni sono applicate nella pipeline di campionamento sintetico e validate nei test (integrita delle chiavi esterne e controlli di dominio di base).

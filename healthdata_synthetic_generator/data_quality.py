@@ -13,38 +13,38 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = PROJECT_ROOT / "out"
 
 PKS: Dict[str, str] = {
-    "patients": "id_paziente",
-    "admissions": "id_ricovero",
-    "diagnoses": "id_diagnosi",
-    "wards": "id_reparto",
-    "staff": "id_staff",
-    "staff_assignments": "id_assegnazione",
-    "devices": "id_dispositivo",
-    "vital_signs": "id_misurazione",
+    "pazienti": "id_paziente",
+    "ricoveri": "id_ricovero",
+    "diagnosi": "id_diagnosi",
+    "reparti": "id_reparto",
+    "personale": "id_staff",
+    "assegnazioni": "id_assegnazione",
+    "dispositivi": "id_dispositivo",
+    "parametri_vitali": "id_misurazione",
 }
 
 FKS: List[Tuple[str, str, str, str]] = [
-    ("admissions", "id_paziente", "patients", "id_paziente"),
-    ("admissions", "id_reparto", "wards", "id_reparto"),
-    ("diagnoses", "id_ricovero", "admissions", "id_ricovero"),
-    ("staff_assignments", "id_staff", "staff", "id_staff"),
-    ("staff_assignments", "id_reparto", "wards", "id_reparto"),
-    ("devices", "id_reparto", "wards", "id_reparto"),
-    ("vital_signs", "id_paziente", "patients", "id_paziente"),
-    ("vital_signs", "id_dispositivo", "devices", "id_dispositivo"),
+    ("ricoveri", "id_paziente", "pazienti", "id_paziente"),
+    ("ricoveri", "id_reparto", "reparti", "id_reparto"),
+    ("diagnosi", "id_ricovero", "ricoveri", "id_ricovero"),
+    ("assegnazioni", "id_staff", "personale", "id_staff"),
+    ("assegnazioni", "id_reparto", "reparti", "id_reparto"),
+    ("dispositivi", "id_reparto", "reparti", "id_reparto"),
+    ("parametri_vitali", "id_paziente", "pazienti", "id_paziente"),
+    ("parametri_vitali", "id_dispositivo", "dispositivi", "id_dispositivo"),
 ]
 
 
 def get_table_paths(out_dir: Path = DEFAULT_OUT_DIR) -> Dict[str, Path]:
     return {
-        "patients": out_dir / "ehr" / "patients",
-        "admissions": out_dir / "ehr" / "admissions",
-        "diagnoses": out_dir / "ehr" / "diagnoses",
-        "wards": out_dir / "erp" / "wards",
-        "staff": out_dir / "erp" / "staff",
-        "staff_assignments": out_dir / "erp" / "staff_assignments",
-        "devices": out_dir / "iot" / "devices",
-        "vital_signs": out_dir / "iot" / "vital_signs",
+        "pazienti": out_dir / "ehr" / "pazienti",
+        "ricoveri": out_dir / "ehr" / "ricoveri",
+        "diagnosi": out_dir / "ehr" / "diagnosi",
+        "reparti": out_dir / "erp" / "reparti",
+        "personale": out_dir / "erp" / "personale",
+        "assegnazioni": out_dir / "erp" / "assegnazioni",
+        "dispositivi": out_dir / "iot" / "dispositivi",
+        "parametri_vitali": out_dir / "iot" / "parametri_vitali",
     }
 
 
@@ -106,7 +106,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
     date_2018_start = pd.Timestamp("2018-01-01")
 
     return {
-        "wards": pa.DataFrameSchema(
+        "reparti": pa.DataFrameSchema(
             {
                 "id_reparto": pa.Column(str),
                 "nome_reparto": pa.Column(str),
@@ -121,7 +121,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 })),
             }
         ),
-        "patients": pa.DataFrameSchema(
+        "pazienti": pa.DataFrameSchema(
             {
                 "id_paziente": pa.Column(str),
                 "nome": pa.Column(str),
@@ -151,7 +151,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "gruppo_sanguigno": pa.Column(str, Check.isin({"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"})),
             }
         ),
-        "staff": pa.DataFrameSchema(
+        "personale": pa.DataFrameSchema(
             {
                 "id_staff": pa.Column(str),
                 "nome": pa.Column(str),
@@ -169,7 +169,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 ),
             }
         ),
-        "staff_assignments": pa.DataFrameSchema(
+        "assegnazioni": pa.DataFrameSchema(
             {
                 "id_assegnazione": pa.Column(str),
                 "id_staff": pa.Column(str),
@@ -177,7 +177,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "turno": pa.Column(str, Check.isin({"Giorno", "Notte", "Sera"})),
             }
         ),
-        "devices": pa.DataFrameSchema(
+        "dispositivi": pa.DataFrameSchema(
             {
                 "id_dispositivo": pa.Column(str),
                 "id_reparto": pa.Column(str),
@@ -198,7 +198,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 ),
             }
         ),
-        "admissions": pa.DataFrameSchema(
+        "ricoveri": pa.DataFrameSchema(
             {
                 "id_ricovero": pa.Column(str),
                 "id_paziente": pa.Column(str),
@@ -211,7 +211,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "esito_dimissione": pa.Column(str, Check.isin({"Domicilio", "Trasferimento", "Riabilitazione", "Deceduto"})),
             }
         ),
-        "diagnoses": pa.DataFrameSchema(
+        "diagnosi": pa.DataFrameSchema(
             {
                 "id_diagnosi": pa.Column(str),
                 "id_ricovero": pa.Column(str),
@@ -219,7 +219,7 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                 "gravita": pa.Column(str, Check.isin({"bassa", "media", "alta"})),
             }
         ),
-        "vital_signs": pa.DataFrameSchema(
+        "parametri_vitali": pa.DataFrameSchema(
             {
                 "id_misurazione": pa.Column(str),
                 "id_paziente": pa.Column(str),
@@ -278,14 +278,14 @@ def validate_domain_constraints(tables: Dict[str, pd.DataFrame]) -> None:
                 f"{table_name}: domain constraints failed. Examples:\n{failure}"
             ) from exc
 
-    admissions = tables["admissions"].copy()
+    admissions = tables["ricoveri"].copy()
     admissions["data_ricovero"] = pd.to_datetime(admissions["data_ricovero"], errors="coerce")
     admissions["data_dimissione"] = pd.to_datetime(admissions["data_dimissione"], errors="coerce")
     invalid_admissions = admissions[admissions["data_ricovero"] > admissions["data_dimissione"]]
     if not invalid_admissions.empty:
         examples = invalid_admissions[["id_ricovero", "data_ricovero", "data_dimissione"]].head(5)
         raise AssertionError(
-            "admissions: data_ricovero must be <= data_dimissione. Examples:\n" + examples.to_string(index=False)
+            "ricoveri: data_ricovero must be <= data_dimissione. Examples:\n" + examples.to_string(index=False)
         )
 
     if "durata_degenza_giorni" in admissions.columns:
@@ -294,17 +294,17 @@ def validate_domain_constraints(tables: Dict[str, pd.DataFrame]) -> None:
         if mismatch.any():
             examples = admissions.loc[mismatch, ["id_ricovero", "durata_degenza_giorni"]].head(5)
             raise AssertionError(
-                "admissions: durata_degenza_giorni must match data_dimissione-data_ricovero in days. Examples:\n"
+                "ricoveri: durata_degenza_giorni must match data_dimissione-data_ricovero in days. Examples:\n"
                 + examples.to_string(index=False)
             )
 
-    devices = tables["devices"].copy()
+    devices = tables["dispositivi"].copy()
     devices["data_acquisto"] = pd.to_datetime(devices["data_acquisto"], errors="coerce")
     devices["data_ultima_calibrazione"] = pd.to_datetime(devices["data_ultima_calibrazione"], errors="coerce")
     invalid_devices = devices[devices["data_ultima_calibrazione"] < devices["data_acquisto"]]
     if not invalid_devices.empty:
         examples = invalid_devices[["id_dispositivo", "data_acquisto", "data_ultima_calibrazione"]].head(5)
         raise AssertionError(
-            "devices: data_ultima_calibrazione must be >= data_acquisto. Examples:\n"
+            "dispositivi: data_ultima_calibrazione must be >= data_acquisto. Examples:\n"
             + examples.to_string(index=False)
         )

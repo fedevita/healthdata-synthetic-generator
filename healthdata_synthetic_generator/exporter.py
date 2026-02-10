@@ -17,14 +17,14 @@ def export_tables(tables: Dict[str, pd.DataFrame], out_dir: Path, fmt: str) -> N
     iot_dir.mkdir(parents=True, exist_ok=True)
 
     mapping = {
-        "patients": ehr_dir / "patients",
-        "admissions": ehr_dir / "admissions",
-        "diagnoses": ehr_dir / "diagnoses",
-        "wards": erp_dir / "wards",
-        "staff": erp_dir / "staff",
-        "staff_assignments": erp_dir / "staff_assignments",
-        "devices": iot_dir / "devices",
-        "vital_signs": iot_dir / "vital_signs",
+        "pazienti": ehr_dir / "pazienti",
+        "ricoveri": ehr_dir / "ricoveri",
+        "diagnosi": ehr_dir / "diagnosi",
+        "reparti": erp_dir / "reparti",
+        "personale": erp_dir / "personale",
+        "assegnazioni": erp_dir / "assegnazioni",
+        "dispositivi": iot_dir / "dispositivi",
+        "parametri_vitali": iot_dir / "parametri_vitali",
     }
 
     for table_name, base_path in mapping.items():
