@@ -229,13 +229,13 @@ def build_schemas() -> Dict[str, pa.DataFrameSchema]:
                     Check.between(date_2025_start, date_2026_end),
                     coerce=True,
                 ),
-                "frequenza_cardiaca": pa.Column(int, Check.between(50, 120)),
-                "saturazione_ossigeno": pa.Column(int, Check.between(90, 100)),
-                "pressione_sistolica": pa.Column(int, Check.between(95, 160)),
-                "pressione_diastolica": pa.Column(int, Check.between(60, 100)),
-                "temperatura_c": pa.Column(float, Check.between(35.0, 40.5)),
-                "frequenza_respiratoria": pa.Column(int, Check.between(10, 30)),
-                "glicemia_mg_dl": pa.Column(int, Check.between(70, 180)),
+                "frequenza_cardiaca": pa.Column(float, Check.between(50, 120), nullable=True),
+                "saturazione_ossigeno": pa.Column(float, Check.between(90, 100), nullable=True),
+                "pressione_sistolica": pa.Column(float, Check.between(95, 160), nullable=True),
+                "pressione_diastolica": pa.Column(float, Check.between(60, 100), nullable=True),
+                "temperatura_c": pa.Column(float, Check.between(35.0, 40.5), nullable=True),
+                "frequenza_respiratoria": pa.Column(float, Check.between(10, 30), nullable=True),
+                "glicemia_mg_dl": pa.Column(float, Check.between(70, 180), nullable=True),
             }
         ),
     }
@@ -297,6 +297,40 @@ def validate_domain_constraints(tables: Dict[str, pd.DataFrame]) -> None:
                 "ricoveri: durata_degenza_giorni must match data_dimissione-data_ricovero in days. Examples:\n"
                 + examples.to_string(index=False)
             )
+
+    # Check consistency between device type and reported vital signs
+    if "parametri_vitali" in tables and "dispositivi" in tables:
+        vitals = tables["parametri_vitali"]
+        devices = tables["dispositivi"]
+        
+        # Merge to get device type
+        vitals_merged = vitals.merge(devices[["id_dispositivo", "tipo_dispositivo"]], on="id_dispositivo", how="left")
+        
+        device_metrics = {
+            "Termometro": ["temperatura_c"],
+            "Pulsossimetro": ["saturazione_ossigeno", "frequenza_cardiaca"],
+            "Sfigmomanometro": ["pressione_sistolica", "pressione_diastolica", "frequenza_cardiaca"],
+            "ECG": ["frequenza_cardiaca", "frequenza_respiratoria"]
+        }
+        
+        all_metrics = [
+            "frequenza_cardiaca", "saturazione_ossigeno", "pressione_sistolica", 
+            "pressione_diastolica", "temperatura_c", "frequenza_respiratoria", "glicemia_mg_dl"
+        ]
+        
+        for dev_type, valid_metrics in device_metrics.items():
+            subset = vitals_merged[vitals_merged["tipo_dispositivo"] == dev_type]
+            if subset.empty:
+                continue
+                
+            # Check that invalid metrics are NULL
+            invalid_metrics = [m for m in all_metrics if m not in valid_metrics]
+            for m in invalid_metrics:
+                bad_rows = subset[subset[m].notna()]
+                if not bad_rows.empty:
+                    raise AssertionError(
+                        f"Device type '{dev_type}' should not have values for '{m}'. Found {len(bad_rows)} violations."
+                    )
 
     devices = tables["dispositivi"].copy()
     devices["data_acquisto"] = pd.to_datetime(devices["data_acquisto"], errors="coerce")

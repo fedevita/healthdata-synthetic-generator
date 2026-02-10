@@ -10,7 +10,7 @@ import numpy as np
 import sdv
 
 from .exporter import export_tables
-from .pipeline import build_metadata, enforce_admission_order, enforce_email_consistency, fit_and_sample
+from .pipeline import build_metadata, enforce_admission_order, enforce_email_consistency, enforce_vital_signs_consistency, fit_and_sample
 from .seed import build_seed_tables
 from .validation import validate_synthetic_tables
 from .utils import log_table_counts
@@ -56,6 +56,7 @@ def main() -> int:
     synthetic_tables = fit_and_sample(real_tables, metadata, scale=args.scale)
     enforce_admission_order(synthetic_tables, rng)
     enforce_email_consistency(synthetic_tables, rng)
+    enforce_vital_signs_consistency(synthetic_tables)
     log_table_counts("Synthetic", synthetic_tables, table_order)
 
     validate_synthetic_tables(synthetic_tables)

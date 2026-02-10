@@ -116,3 +116,38 @@ def enforce_admission_order(tables: Dict[str, pd.DataFrame], rng: np.random.Gene
 
     if "durata_degenza_giorni" in admissions.columns:
         admissions["durata_degenza_giorni"] = los.where(valid_admit, admissions["durata_degenza_giorni"])
+
+
+def enforce_vital_signs_consistency(tables: Dict[str, pd.DataFrame]) -> None:
+    vitals = tables.get("parametri_vitali")
+    devices = tables.get("dispositivi")
+    
+    if vitals is None or vitals.empty or devices is None or devices.empty:
+        return
+
+    # Check if we have the necessary columns
+    if "id_dispositivo" not in vitals.columns or "id_dispositivo" not in devices.columns:
+        return
+
+    # Create a mapping of id_dispositivo -> tipo_dispositivo
+    merged = vitals.merge(devices[["id_dispositivo", "tipo_dispositivo"]], on="id_dispositivo", how="left")
+    
+    # Termometro: only temperature
+    mask_term = merged["tipo_dispositivo"] == "Termometro"
+    if mask_term.any():
+        vitals.loc[mask_term, ["frequenza_cardiaca", "saturazione_ossigeno", "pressione_sistolica", "pressione_diastolica", "frequenza_respiratoria", "glicemia_mg_dl"]] = np.nan
+    
+    # Pulsossimetro: only SpO2, HR
+    mask_pulso = merged["tipo_dispositivo"] == "Pulsossimetro"
+    if mask_pulso.any():
+        vitals.loc[mask_pulso, ["pressione_sistolica", "pressione_diastolica", "temperatura_c", "frequenza_respiratoria", "glicemia_mg_dl"]] = np.nan
+    
+    # Sfigmomanometro: only BP (Sys/Dia), HR
+    mask_sfig = merged["tipo_dispositivo"] == "Sfigmomanometro"
+    if mask_sfig.any():
+        vitals.loc[mask_sfig, ["saturazione_ossigeno", "temperatura_c", "frequenza_respiratoria", "glicemia_mg_dl"]] = np.nan
+    
+    # ECG: only HR, Resp Rate
+    mask_ecg = merged["tipo_dispositivo"] == "ECG"
+    if mask_ecg.any():
+        vitals.loc[mask_ecg, ["saturazione_ossigeno", "pressione_sistolica", "pressione_diastolica", "temperatura_c", "glicemia_mg_dl"]] = np.nan

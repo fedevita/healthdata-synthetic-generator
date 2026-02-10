@@ -193,18 +193,69 @@ def build_seed_tables(rng: np.random.Generator) -> Dict[str, pd.DataFrame]:
     })
 
     measurement_ids = make_ids("VS", n_vitals, 7)
+    vital_signs_device_choices = rng.choice(device_ids, size=n_vitals, replace=True)
+    
+    # Pre-generate potential values for all columns
+    fc_vals = rng.integers(50, 120, size=n_vitals).astype(float)
+    so_vals = rng.integers(90, 100, size=n_vitals).astype(float)
+    ps_vals = rng.integers(95, 160, size=n_vitals).astype(float)
+    pd_vals = rng.integers(60, 100, size=n_vitals).astype(float)
+    tc_vals = rng.uniform(35.0, 40.5, size=n_vitals).round(1)
+    fr_vals = rng.integers(10, 31, size=n_vitals).astype(float)
+    gl_vals = rng.integers(70, 181, size=n_vitals).astype(float) # Currently no Glucometer, so this might be mostly NaN or assigned to something else
+    
+    # Map device types to arrays
+    # 1. Create a map of device_id -> tipo_dispositivo
+    dev_type_map = pd.Series(devices["tipo_dispositivo"].values, index=devices["id_dispositivo"]).to_dict()
+    
+    # 2. Get type for each measurement row
+    row_dev_types = np.array([dev_type_map[d] for d in vital_signs_device_choices])
+
+    # 3. Apply masks based on device type
+    # Termometro -> only temperatura_c
+    mask_termometro = row_dev_types == "Termometro"
+    fc_vals[mask_termometro] = np.nan
+    so_vals[mask_termometro] = np.nan
+    ps_vals[mask_termometro] = np.nan
+    pd_vals[mask_termometro] = np.nan
+    fr_vals[mask_termometro] = np.nan
+    gl_vals[mask_termometro] = np.nan
+
+    # Pulsossimetro -> saturazione_ossigeno, frequenza_cardiaca
+    mask_pulso = row_dev_types == "Pulsossimetro"
+    ps_vals[mask_pulso] = np.nan
+    pd_vals[mask_pulso] = np.nan
+    tc_vals[mask_pulso] = np.nan
+    fr_vals[mask_pulso] = np.nan
+    gl_vals[mask_pulso] = np.nan
+    
+    # Sfigmomanometro -> pressione_sistolica, pressione_diastolica, frequenza_cardiaca
+    mask_sfigmo = row_dev_types == "Sfigmomanometro"
+    so_vals[mask_sfigmo] = np.nan
+    tc_vals[mask_sfigmo] = np.nan
+    fr_vals[mask_sfigmo] = np.nan
+    gl_vals[mask_sfigmo] = np.nan
+    
+    # ECG -> frequenza_cardiaca, frequenza_respiratoria
+    mask_ecg = row_dev_types == "ECG" 
+    so_vals[mask_ecg] = np.nan
+    ps_vals[mask_ecg] = np.nan
+    pd_vals[mask_ecg] = np.nan
+    tc_vals[mask_ecg] = np.nan
+    gl_vals[mask_ecg] = np.nan
+
     vital_signs = pd.DataFrame({
         "id_misurazione": measurement_ids,
         "id_paziente": rng.choice(patient_ids, size=n_vitals, replace=True),
-        "id_dispositivo": rng.choice(device_ids, size=n_vitals, replace=True),
+        "id_dispositivo": vital_signs_device_choices,
         "data_misurazione": random_dates(vitals_start, vitals_end, n_vitals),
-        "frequenza_cardiaca": rng.integers(50, 120, size=n_vitals),
-        "saturazione_ossigeno": rng.integers(90, 100, size=n_vitals),
-        "pressione_sistolica": rng.integers(95, 160, size=n_vitals),
-        "pressione_diastolica": rng.integers(60, 100, size=n_vitals),
-        "temperatura_c": rng.uniform(35.0, 40.5, size=n_vitals).round(1),
-        "frequenza_respiratoria": rng.integers(10, 31, size=n_vitals),
-        "glicemia_mg_dl": rng.integers(70, 181, size=n_vitals),
+        "frequenza_cardiaca": fc_vals,
+        "saturazione_ossigeno": so_vals,
+        "pressione_sistolica": ps_vals,
+        "pressione_diastolica": pd_vals,
+        "temperatura_c": tc_vals,
+        "frequenza_respiratoria": fr_vals,
+        "glicemia_mg_dl": gl_vals,
     })
 
     return {
